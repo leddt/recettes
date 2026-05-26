@@ -2,6 +2,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 
 import {
+  recipeDetailValidator,
   recipeDraftValidator,
   recipeListItemValidator,
 } from "./lib/recipeValidators";
@@ -35,6 +36,36 @@ function validateRecipeDraft(args: {
 
   return { name, ingredients, steps };
 }
+
+export const get = query({
+  args: { id: v.id("recipes") },
+  returns: v.union(recipeDetailValidator, v.null()),
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (userId === null) {
+      throw new Error("Non authentifié.");
+    }
+
+    const recipe = await ctx.db.get(args.id);
+    if (recipe === null) {
+      return null;
+    }
+
+    return {
+      _id: recipe._id,
+      name: recipe.name,
+      ingredients: recipe.ingredients,
+      steps: recipe.steps,
+      servings: recipe.servings,
+      prepTime: recipe.prepTime,
+      cookTime: recipe.cookTime,
+      sourceUrl: recipe.sourceUrl,
+      sourceLabel: recipe.sourceLabel,
+      notes: recipe.notes,
+      tags: recipe.tags,
+    };
+  },
+});
 
 export const list = query({
   args: {},

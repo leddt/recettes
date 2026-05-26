@@ -36,3 +36,10 @@ export const recipeListItemValidator = v.object({
   sourceUrl: v.optional(v.string()),
   tags: v.array(v.string()),
 });
+
+export const recipeDetailValidator = v.object({
+  _id: v.id("recipes"),
+  ...recipeDraftValidator.fields,
+  sourceUrl: v.optional(v.string()),
+  sourceLabel: v.optional(v.string()),
+});

@@ -84,3 +84,29 @@ export function tagsFromInput(value: string): string[] {
     .map((tag) => tag.trim())
     .filter((tag) => tag.length > 0);
 }
+
+export function formatRecipeSummary(recipe: {
+  servings?: number;
+  prepTime?: number;
+  cookTime?: number;
+}): string {
+  return [
+    recipe.servings
+      ? `${recipe.servings} portion${recipe.servings > 1 ? "s" : ""}`
+      : null,
+    recipe.prepTime ? `${recipe.prepTime} min de préparation` : null,
+    recipe.cookTime ? `${recipe.cookTime} min de cuisson` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+export function formatIngredient(ingredient: RecipeIngredient): string {
+  return [
+    ingredient.quantity?.trim(),
+    ingredient.unit?.trim(),
+    ingredient.name.trim(),
+  ]
+    .filter((part) => part && part.length > 0)
+    .join(" ");
+}

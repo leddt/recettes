@@ -4,7 +4,9 @@ import { useState } from "react";
 
 import { LoginForm } from "@/components/login-form";
 import { RecipeImportFlow } from "@/components/recipe-import-flow";
+import { RecipeView } from "@/components/recipe-view";
 import { Button } from "@/components/ui/button";
+import { formatRecipeSummary } from "@/lib/recipe-types";
 import {
   Card,
   CardContent,
@@ -13,8 +15,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { api } from "../convex/_generated/api";
+import type { Id } from "../convex/_generated/dataModel";
 
-type AppView = "home" | "import";
+type AppView = "home" | "import" | "view";
 
 export function App() {
   const { isAuthenticated, isLoading } = useConvexAuth();
@@ -22,6 +25,18 @@ export function App() {
   const viewer = useQuery(api.users.viewer);
   const recipes = useQuery(api.recipes.list);
   const [view, setView] = useState<AppView>("home");
+  const [selectedRecipeId, setSelectedRecipeId] =
+    useState<Id<"recipes"> | null>(null);
+
+  function openRecipe(recipeId: Id<"recipes">) {
+    setSelectedRecipeId(recipeId);
+    setView("view");
+  }
+
+  function goHome() {
+    setView("home");
+    setSelectedRecipeId(null);
+  }
 
   if (isLoading) {
     return (
@@ -51,13 +66,13 @@ export function App() {
           ) : null}
         </div>
         <div className="flex items-center gap-2">
-          {view === "import" ? (
-            <Button variant="outline" onClick={() => setView("home")}>
-              Accueil
-            </Button>
-          ) : (
+          {view === "home" ? (
             <Button onClick={() => setView("import")}>
               Importer une recette
+            </Button>
+          ) : (
+            <Button variant="outline" onClick={goHome}>
+              Accueil
             </Button>
           )}
           <Button variant="outline" onClick={() => void signOut()}>
@@ -68,10 +83,9 @@ export function App() {
 
       <main className="flex flex-1 flex-col gap-6 p-6">
         {view === "import" ? (
-          <RecipeImportFlow
-            onCancel={() => setView("home")}
-            onSaved={() => setView("home")}
-          />
+          <RecipeImportFlow onCancel={goHome} onSaved={goHome} />
+        ) : view === "view" && selectedRecipeId !== null ? (
+          <RecipeView recipeId={selectedRecipeId} />
         ) : (
           <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
             <Card>
@@ -94,43 +108,23 @@ export function App() {
                 ) : (
                   <ul className="flex flex-col gap-3">
                     {recipes.map((recipe) => (
-                      <li
-                        key={recipe._id}
-                        className="rounded-lg border px-4 py-3"
-                      >
-                        <div className="flex flex-col gap-1">
+                      <li key={recipe._id}>
+                        <button
+                          type="button"
+                          onClick={() => openRecipe(recipe._id)}
+                          className="flex w-full flex-col gap-1 rounded-lg border px-4 py-3 text-left transition-colors hover:bg-muted/50"
+                        >
                           <p className="font-medium">{recipe.name}</p>
                           <p className="text-sm text-muted-foreground">
-                            {[
-                              recipe.servings
-                                ? `${recipe.servings} portion${recipe.servings > 1 ? "s" : ""}`
-                                : null,
-                              recipe.prepTime
-                                ? `${recipe.prepTime} min prep`
-                                : null,
-                              recipe.cookTime
-                                ? `${recipe.cookTime} min cuisson`
-                                : null,
-                            ]
-                              .filter(Boolean)
-                              .join(" · ") || "Détails à compléter"}
+                            {formatRecipeSummary(recipe) ||
+                              "Détails à compléter"}
                           </p>
-                          {recipe.sourceUrl ? (
-                            <a
-                              href={recipe.sourceUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-sm text-primary underline-offset-4 hover:underline"
-                            >
-                              Source
-                            </a>
-                          ) : null}
                           {recipe.tags.length > 0 ? (
                             <p className="text-xs text-muted-foreground">
                               {recipe.tags.join(", ")}
                             </p>
                           ) : null}
-                        </div>
+                        </button>
                       </li>
                     ))}
                   </ul>
