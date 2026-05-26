@@ -59,6 +59,7 @@ export const get = query({
       servings: recipe.servings,
       prepTime: recipe.prepTime,
       cookTime: recipe.cookTime,
+      totalTime: recipe.totalTime,
       sourceUrl: recipe.sourceUrl,
       sourceLabel: recipe.sourceLabel,
       notes: recipe.notes,
@@ -85,6 +86,7 @@ export const list = query({
         servings: recipe.servings,
         prepTime: recipe.prepTime,
         cookTime: recipe.cookTime,
+        totalTime: recipe.totalTime,
         sourceUrl: recipe.sourceUrl,
         tags: recipe.tags,
       }))
@@ -121,6 +123,7 @@ export const create = mutation({
       servings: args.servings,
       prepTime: args.prepTime,
       cookTime: args.cookTime,
+      totalTime: args.totalTime,
       sourceUrl: args.sourceUrl?.trim() || undefined,
       sourceLabel: args.sourceLabel?.trim() || undefined,
       notes: args.notes?.trim() || undefined,

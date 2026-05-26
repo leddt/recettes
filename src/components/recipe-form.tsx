@@ -98,7 +98,7 @@ export function RecipeForm({
               />
             </Field>
 
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <Field>
                 <FieldLabel htmlFor="recipe-servings">Portions</FieldLabel>
                 <Input
@@ -142,6 +142,21 @@ export function RecipeForm({
                     onChange({
                       ...value,
                       cookTime: parseOptionalNumber(event.target.value),
+                    })
+                  }
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="recipe-total-time">Temps total (min)</FieldLabel>
+                <Input
+                  id="recipe-total-time"
+                  type="number"
+                  min={0}
+                  value={value.totalTime ?? ""}
+                  onChange={(event) =>
+                    onChange({
+                      ...value,
+                      totalTime: parseOptionalNumber(event.target.value),
                     })
                   }
                 />

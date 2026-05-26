@@ -15,6 +15,7 @@ export type RecipeDraft = {
   servings?: number;
   prepTime?: number;
   cookTime?: number;
+  totalTime?: number;
   notes?: string;
   tags: string[];
 };
@@ -69,6 +70,7 @@ export function normalizeRecipeDraft(draft: RecipeDraft): RecipeDraft {
     servings: draft.servings,
     prepTime: draft.prepTime,
     cookTime: draft.cookTime,
+    totalTime: draft.totalTime,
     notes: draft.notes?.trim() || undefined,
     tags: draft.tags.map((tag) => tag.trim()).filter((tag) => tag.length > 0),
   };
@@ -89,6 +91,7 @@ export function formatRecipeSummary(recipe: {
   servings?: number;
   prepTime?: number;
   cookTime?: number;
+  totalTime?: number;
 }): string {
   return [
     recipe.servings
@@ -96,6 +99,7 @@ export function formatRecipeSummary(recipe: {
       : null,
     recipe.prepTime ? `${recipe.prepTime} min de préparation` : null,
     recipe.cookTime ? `${recipe.cookTime} min de cuisson` : null,
+    recipe.totalTime ? `${recipe.totalTime} min au total` : null,
   ]
     .filter(Boolean)
     .join(" · ");

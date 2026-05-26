@@ -17,6 +17,7 @@ export const recipeDraftValidator = v.object({
   servings: v.optional(v.number()),
   prepTime: v.optional(v.number()),
   cookTime: v.optional(v.number()),
+  totalTime: v.optional(v.number()),
   notes: v.optional(v.string()),
   tags: v.array(v.string()),
 });
@@ -33,6 +34,7 @@ export const recipeListItemValidator = v.object({
   servings: v.optional(v.number()),
   prepTime: v.optional(v.number()),
   cookTime: v.optional(v.number()),
+  totalTime: v.optional(v.number()),
   sourceUrl: v.optional(v.string()),
   tags: v.array(v.string()),
 });

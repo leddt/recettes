@@ -171,6 +171,7 @@ function recipeFromJsonLd(node: Record<string, unknown>): RecipeDraftData | null
     servings: parseServings(node.recipeYield),
     prepTime: parseDurationToMinutes(node.prepTime),
     cookTime: parseDurationToMinutes(node.cookTime),
+    totalTime: parseDurationToMinutes(node.totalTime),
     notes:
       typeof node.description === "string" && node.description.trim().length > 0
         ? node.description.trim()

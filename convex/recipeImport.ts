@@ -65,6 +65,7 @@ const recipeJsonSchema = {
     servings: { type: ["number", "null"] },
     prepTime: { type: ["number", "null"] },
     cookTime: { type: ["number", "null"] },
+    totalTime: { type: ["number", "null"] },
     notes: { type: ["string", "null"] },
     tags: {
       type: "array",
@@ -78,6 +79,7 @@ const recipeJsonSchema = {
     "servings",
     "prepTime",
     "cookTime",
+    "totalTime",
     "notes",
     "tags",
   ],
@@ -111,6 +113,7 @@ function mapAiDraft(raw: {
   servings: number | null;
   prepTime: number | null;
   cookTime: number | null;
+  totalTime: number | null;
   notes: string | null;
   tags: string[];
 }): RecipeDraftData {
@@ -125,6 +128,7 @@ function mapAiDraft(raw: {
     servings: nullableNumber(raw.servings),
     prepTime: nullableNumber(raw.prepTime),
     cookTime: nullableNumber(raw.cookTime),
+    totalTime: nullableNumber(raw.totalTime),
     notes: nullableString(raw.notes),
     tags: raw.tags,
   });
@@ -145,7 +149,7 @@ async function extractRecipeWithAi(
         content:
           "Tu extrais une recette de cuisine à partir du contenu d'une page web. " +
           "Réponds uniquement avec les champs demandés. " +
-          "Les durées prepTime et cookTime doivent être en minutes. " +
+          "Les durées prepTime, cookTime et totalTime doivent être en minutes. " +
           "Si une information est absente, mets null ou une liste vide.",
       },
       {
@@ -180,6 +184,7 @@ async function extractRecipeWithAi(
     servings: number | null;
     prepTime: number | null;
     cookTime: number | null;
+    totalTime: number | null;
     notes: string | null;
     tags: string[];
   };

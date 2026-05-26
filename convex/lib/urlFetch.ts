@@ -20,6 +20,7 @@ export type RecipeDraftData = {
   servings?: number;
   prepTime?: number;
   cookTime?: number;
+  totalTime?: number;
   notes?: string;
   tags: string[];
 };
@@ -190,6 +191,7 @@ export function normalizeRecipeDraft(draft: RecipeDraftData): RecipeDraftData {
     servings: draft.servings,
     prepTime: draft.prepTime,
     cookTime: draft.cookTime,
+    totalTime: draft.totalTime,
     notes: draft.notes?.trim() || undefined,
     tags: draft.tags.map((tag) => tag.trim()).filter((tag) => tag.length > 0),
   };

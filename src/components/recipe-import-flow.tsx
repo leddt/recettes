@@ -52,6 +52,7 @@ function extractedToDraft(result: ExtractedRecipe): RecipeDraft {
     servings: result.servings,
     prepTime: result.prepTime,
     cookTime: result.cookTime,
+    totalTime: result.totalTime,
     notes: result.notes,
     tags: result.tags,
   };
