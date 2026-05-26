@@ -1,5 +1,6 @@
 import { useAction, useMutation } from "convex/react";
 import { useState } from "react";
+import { useNavigate } from "react-router";
 
 import { RecipeForm } from "@/components/recipe-form";
 import { Button } from "@/components/ui/button";
@@ -27,11 +28,6 @@ import {
 } from "@/lib/recipe-types";
 import { api } from "../../convex/_generated/api";
 
-type RecipeImportFlowProps = {
-  onCancel: () => void;
-  onSaved: () => void;
-};
-
 function getImportErrorMessage(error: unknown): string {
   if (error instanceof Error && error.message.length > 0) {
     return error.message;
@@ -58,7 +54,8 @@ function extractedToDraft(result: ExtractedRecipe): RecipeDraft {
   };
 }
 
-export function RecipeImportFlow({ onCancel, onSaved }: RecipeImportFlowProps) {
+export function RecipeImportFlow() {
+  const navigate = useNavigate();
   const extractFromUrl = useAction(api.recipeImport.extractFromUrl);
   const createRecipe = useMutation(api.recipes.create);
 
@@ -127,7 +124,7 @@ export function RecipeImportFlow({ onCancel, onSaved }: RecipeImportFlowProps) {
         sourceUrl: extracted?.sourceUrl,
         sourceLabel: extracted?.sourceLabel,
       });
-      onSaved();
+      navigate("/");
     } catch (saveError) {
       setError(getImportErrorMessage(saveError));
     } finally {
@@ -166,7 +163,7 @@ export function RecipeImportFlow({ onCancel, onSaved }: RecipeImportFlowProps) {
             </FieldGroup>
           </CardContent>
           <CardFooter className="flex justify-between gap-3">
-            <Button type="button" variant="outline" onClick={onCancel}>
+            <Button type="button" variant="outline" onClick={() => navigate("/")}>
               Annuler
             </Button>
             <Button type="submit" disabled={isAnalyzing}>
