@@ -10,6 +10,9 @@
 
 import type * as auth from "../auth.js";
 import type * as http from "../http.js";
+import type * as lib_defaults from "../lib/defaults.js";
+import type * as seed from "../seed.js";
+import type * as users from "../users.js";
 
 import type {
   ApiFromModules,
@@ -20,6 +23,9 @@ import type {
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   http: typeof http;
+  "lib/defaults": typeof lib_defaults;
+  seed: typeof seed;
+  users: typeof users;
 }>;
 
 /**
