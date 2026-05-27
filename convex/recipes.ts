@@ -1,11 +1,13 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 
+import { internal } from "./_generated/api";
 import {
   recipeDetailValidator,
   recipeDraftValidator,
   recipeListItemValidator,
 } from "./lib/recipeValidators";
+import { buildRecipeSearchText } from "./lib/recipeSearchText";
 import { mutation, query } from "./_generated/server";
 
 function validateRecipeDraft(args: {
@@ -118,14 +120,22 @@ export const create = mutation({
 
     const { name, ingredients, steps } = validateRecipeDraft(args);
     const now = Date.now();
-
-    return await ctx.db.insert("recipes", {
+    const normalizedIngredients = ingredients.map((ingredient) => ({
+      name: ingredient.name.trim(),
+      quantity: ingredient.quantity?.trim() || undefined,
+      unit: ingredient.unit?.trim() || undefined,
+    }));
+    const tags = args.tags.map((tag) => tag.trim()).filter((tag) => tag.length > 0);
+    const searchText = buildRecipeSearchText({
       name,
-      ingredients: ingredients.map((ingredient) => ({
-        name: ingredient.name.trim(),
-        quantity: ingredient.quantity?.trim() || undefined,
-        unit: ingredient.unit?.trim() || undefined,
-      })),
+      notes: args.notes?.trim() || undefined,
+      tags,
+      ingredients: normalizedIngredients,
+    });
+
+    const recipeId = await ctx.db.insert("recipes", {
+      name,
+      ingredients: normalizedIngredients,
       steps: steps.map((step) => ({
         text: step.text.trim(),
       })),
@@ -138,9 +148,16 @@ export const create = mutation({
       photos:
         args.photos && args.photos.length > 0 ? args.photos : undefined,
       notes: args.notes?.trim() || undefined,
-      tags: args.tags.map((tag) => tag.trim()).filter((tag) => tag.length > 0),
+      tags,
+      searchText,
       createdAt: now,
       updatedAt: now,
     });
+
+    await ctx.scheduler.runAfter(0, internal.recipeSearch.indexRecipe, {
+      recipeId,
+    });
+
+    return recipeId;
   },
 });

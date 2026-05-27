@@ -30,5 +30,15 @@ export default defineSchema({
     tags: v.array(v.string()),
     createdAt: v.number(),
     updatedAt: v.number(),
-  }).index("by_name", ["name"]),
+    searchText: v.optional(v.string()),
+    embedding: v.optional(v.array(v.float64())),
+  })
+    .index("by_name", ["name"])
+    .searchIndex("search_recipes", {
+      searchField: "searchText",
+    })
+    .vectorIndex("by_embedding", {
+      vectorField: "embedding",
+      dimensions: 1536,
+    }),
 });

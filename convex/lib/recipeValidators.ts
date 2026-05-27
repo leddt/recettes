@@ -40,6 +40,12 @@ export const recipeListItemValidator = v.object({
   tags: v.array(v.string()),
 });
 
+export const recipeSearchResultValidator = v.object({
+  ...recipeListItemValidator.fields,
+  source: v.union(v.literal("text"), v.literal("semantic")),
+  score: v.optional(v.number()),
+});
+
 export const recipeDetailValidator = v.object({
   _id: v.id("recipes"),
   ...recipeDraftValidator.fields,

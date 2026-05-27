@@ -1,5 +1,7 @@
 import { useAuthActions, useConvexAuth } from "@convex-dev/auth/react";
-import { useQuery } from "convex/react";
+import { useAction, useQuery } from "convex/react";
+import { Search } from "lucide-react";
+import { useEffect, useState } from "react";
 import {
   Link,
   Navigate,
@@ -14,6 +16,7 @@ import { LoginForm } from "@/components/login-form";
 import { RecipeImportFlow } from "@/components/recipe-import-flow";
 import { RecipeView } from "@/components/recipe-view";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { formatRecipeSummary } from "@/lib/recipe-types";
 import {
   Card,
@@ -25,8 +28,133 @@ import {
 import { api } from "../convex/_generated/api";
 import type { Id } from "../convex/_generated/dataModel";
 
+const SEARCH_DEBOUNCE_MS = 300;
+const MIN_SEARCH_LENGTH = 2;
+
+type RecipeListEntry = {
+  _id: Id<"recipes">;
+  name: string;
+  servings?: number;
+  prepTime?: number;
+  cookTime?: number;
+  totalTime?: number;
+  sourceUrl?: string;
+  tags: string[];
+  source?: "text" | "semantic";
+};
+
+function RecipeListItems({ recipes }: { recipes: RecipeListEntry[] }) {
+  if (recipes.length === 0) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        Aucune recette ne correspond à votre recherche.
+      </p>
+    );
+  }
+
+  return (
+    <ul className="flex flex-col gap-3">
+      {recipes.map((recipe) => (
+        <li key={recipe._id}>
+          <Link
+            to={`/recipes/${recipe._id}`}
+            className="flex w-full flex-col gap-1 rounded-lg border px-4 py-3 text-left transition-colors hover:bg-muted/50"
+          >
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="font-medium">{recipe.name}</p>
+              {recipe.source === "semantic" ? (
+                <span className="rounded-md bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
+                  Suggestion
+                </span>
+              ) : null}
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {formatRecipeSummary(recipe) || "Détails à compléter"}
+            </p>
+            {recipe.tags.length > 0 ? (
+              <p className="text-xs text-muted-foreground">
+                {recipe.tags.join(", ")}
+              </p>
+            ) : null}
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+type SearchState = {
+  forQuery: string;
+  results: RecipeListEntry[] | null;
+  error: string | null;
+};
+
 function RecipeListPage() {
   const recipes = useQuery(api.recipes.list);
+  const searchRecipes = useAction(api.recipeSearch.search);
+  const [searchInput, setSearchInput] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [searchState, setSearchState] = useState<SearchState | null>(null);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedQuery(searchInput.trim());
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [searchInput]);
+
+  const isSearchActive = debouncedQuery.length >= MIN_SEARCH_LENGTH;
+
+  useEffect(() => {
+    if (!isSearchActive) {
+      return;
+    }
+
+    const queryAtStart = debouncedQuery;
+    let cancelled = false;
+
+    void searchRecipes({ query: debouncedQuery })
+      .then((results) => {
+        if (!cancelled) {
+          setSearchState({
+            forQuery: queryAtStart,
+            results,
+            error: null,
+          });
+        }
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setSearchState({
+            forQuery: queryAtStart,
+            results: [],
+            error:
+              error instanceof Error
+                ? error.message
+                : "La recherche a échoué.",
+          });
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedQuery, isSearchActive, searchRecipes]);
+
+  const searchMatchesQuery =
+    searchState !== null && searchState.forQuery === debouncedQuery;
+  const displayedRecipes = isSearchActive
+    ? searchMatchesQuery
+      ? searchState.results
+      : null
+    : recipes;
+  const searchError = searchMatchesQuery ? searchState.error : null;
+  const isLoading = isSearchActive
+    ? !searchMatchesQuery || searchState.results === null
+    : recipes === undefined;
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
@@ -38,37 +166,34 @@ function RecipeListPage() {
             puis enregistrez-la ici.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          {recipes === undefined ? (
+        <CardContent className="flex flex-col gap-4">
+          <div className="relative">
+            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="search"
+              value={searchInput}
+              onChange={(event) => setSearchInput(event.target.value)}
+              placeholder="Rechercher par nom, ingrédient, tag…"
+              className="pl-9"
+              aria-label="Rechercher des recettes"
+            />
+          </div>
+
+          {searchError ? (
+            <p className="text-sm text-destructive">{searchError}</p>
+          ) : null}
+
+          {isLoading ? (
             <p className="text-sm text-muted-foreground">
-              Chargement des recettes...
+              {isSearchActive ? "Recherche en cours…" : "Chargement des recettes…"}
             </p>
-          ) : recipes.length === 0 ? (
+          ) : !isSearchActive && displayedRecipes?.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               Aucune recette enregistrée pour le moment.
             </p>
-          ) : (
-            <ul className="flex flex-col gap-3">
-              {recipes.map((recipe) => (
-                <li key={recipe._id}>
-                  <Link
-                    to={`/recipes/${recipe._id}`}
-                    className="flex w-full flex-col gap-1 rounded-lg border px-4 py-3 text-left transition-colors hover:bg-muted/50"
-                  >
-                    <p className="font-medium">{recipe.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {formatRecipeSummary(recipe) || "Détails à compléter"}
-                    </p>
-                    {recipe.tags.length > 0 ? (
-                      <p className="text-xs text-muted-foreground">
-                        {recipe.tags.join(", ")}
-                      </p>
-                    ) : null}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
+          ) : displayedRecipes ? (
+            <RecipeListItems recipes={displayedRecipes} />
+          ) : null}
         </CardContent>
       </Card>
     </div>
