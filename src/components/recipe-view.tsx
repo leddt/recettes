@@ -88,6 +88,29 @@ export function RecipeView({ recipeId }: RecipeViewProps) {
             </div>
           ) : null}
 
+          {recipe.photoUrls && recipe.photoUrls.some((url) => url !== null) ? (
+            <div className="flex flex-col gap-2">
+              <p className="text-sm font-medium">Photos source</p>
+              <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {recipe.photoUrls.map(
+                  (photoUrl, index) =>
+                    photoUrl !== null ? (
+                      <li
+                        key={`${photoUrl}-${index}`}
+                        className="overflow-hidden rounded-lg border bg-muted/30"
+                      >
+                        <img
+                          src={photoUrl}
+                          alt={`${recipe.name} — photo ${index + 1}`}
+                          className="aspect-square w-full object-cover"
+                        />
+                      </li>
+                    ) : null,
+                )}
+              </ul>
+            </div>
+          ) : null}
+
           {recipe.notes ? (
             <>
               <Separator />

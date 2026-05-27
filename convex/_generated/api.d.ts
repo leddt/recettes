@@ -9,9 +9,12 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as files from "../files.js";
 import type * as http from "../http.js";
 import type * as lib_defaults from "../lib/defaults.js";
 import type * as lib_htmlParse from "../lib/htmlParse.js";
+import type * as lib_recipeAi from "../lib/recipeAi.js";
+import type * as lib_recipeImageLimits from "../lib/recipeImageLimits.js";
 import type * as lib_recipeJsonLd from "../lib/recipeJsonLd.js";
 import type * as lib_recipeValidators from "../lib/recipeValidators.js";
 import type * as lib_urlFetch from "../lib/urlFetch.js";
@@ -28,9 +31,12 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  files: typeof files;
   http: typeof http;
   "lib/defaults": typeof lib_defaults;
   "lib/htmlParse": typeof lib_htmlParse;
+  "lib/recipeAi": typeof lib_recipeAi;
+  "lib/recipeImageLimits": typeof lib_recipeImageLimits;
   "lib/recipeJsonLd": typeof lib_recipeJsonLd;
   "lib/recipeValidators": typeof lib_recipeValidators;
   "lib/urlFetch": typeof lib_urlFetch;

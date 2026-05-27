@@ -26,6 +26,7 @@ export const extractedRecipeValidator = v.object({
   ...recipeDraftValidator.fields,
   sourceUrl: v.optional(v.string()),
   sourceLabel: v.optional(v.string()),
+  photos: v.optional(v.array(v.id("_storage"))),
 });
 
 export const recipeListItemValidator = v.object({
@@ -44,4 +45,6 @@ export const recipeDetailValidator = v.object({
   ...recipeDraftValidator.fields,
   sourceUrl: v.optional(v.string()),
   sourceLabel: v.optional(v.string()),
+  photos: v.optional(v.array(v.id("_storage"))),
+  photoUrls: v.optional(v.array(v.union(v.string(), v.null()))),
 });

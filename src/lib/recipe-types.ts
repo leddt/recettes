@@ -20,9 +20,12 @@ export type RecipeDraft = {
   tags: string[];
 };
 
+import type { Id } from "../../convex/_generated/dataModel";
+
 export type ExtractedRecipe = RecipeDraft & {
   sourceUrl?: string;
   sourceLabel?: string;
+  photos?: Id<"_storage">[];
 };
 
 export function createEmptyRecipeDraft(): RecipeDraft {

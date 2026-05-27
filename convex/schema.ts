@@ -24,6 +24,7 @@ export default defineSchema({
     totalTime: v.optional(v.number()),
     sourceUrl: v.optional(v.string()),
     sourceLabel: v.optional(v.string()),
+    photos: v.optional(v.array(v.id("_storage"))),
     notes: v.optional(v.string()),
     rating: v.optional(v.number()),
     tags: v.array(v.string()),

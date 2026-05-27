@@ -51,6 +51,12 @@ export const get = query({
       return null;
     }
 
+    const photos = recipe.photos;
+    const photoUrls =
+      photos && photos.length > 0
+        ? await Promise.all(photos.map((photoId) => ctx.storage.getUrl(photoId)))
+        : undefined;
+
     return {
       _id: recipe._id,
       name: recipe.name,
@@ -62,6 +68,8 @@ export const get = query({
       totalTime: recipe.totalTime,
       sourceUrl: recipe.sourceUrl,
       sourceLabel: recipe.sourceLabel,
+      photos,
+      photoUrls,
       notes: recipe.notes,
       tags: recipe.tags,
     };
@@ -99,6 +107,7 @@ export const create = mutation({
     ...recipeDraftValidator.fields,
     sourceUrl: v.optional(v.string()),
     sourceLabel: v.optional(v.string()),
+    photos: v.optional(v.array(v.id("_storage"))),
   },
   returns: v.id("recipes"),
   handler: async (ctx, args) => {
@@ -126,6 +135,8 @@ export const create = mutation({
       totalTime: args.totalTime,
       sourceUrl: args.sourceUrl?.trim() || undefined,
       sourceLabel: args.sourceLabel?.trim() || undefined,
+      photos:
+        args.photos && args.photos.length > 0 ? args.photos : undefined,
       notes: args.notes?.trim() || undefined,
       tags: args.tags.map((tag) => tag.trim()).filter((tag) => tag.length > 0),
       createdAt: now,
