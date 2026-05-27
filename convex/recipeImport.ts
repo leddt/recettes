@@ -86,6 +86,7 @@ export const extractFromUrl = action({
   args: {
     url: v.string(),
     forceAi: v.optional(v.boolean()),
+    userInstructions: v.optional(v.string()),
   },
   returns: extractedRecipeValidator,
   handler: async (ctx, args) => {
@@ -96,11 +97,16 @@ export const extractFromUrl = action({
 
     const { html, finalUrl } = await fetchPageHtml(args.url);
     const draft = args.forceAi
-      ? await extractRecipeWithAiFromText(htmlToText(html), finalUrl.toString())
+      ? await extractRecipeWithAiFromText(
+          htmlToText(html),
+          finalUrl.toString(),
+          args.userInstructions,
+        )
       : (extractRecipeFromJsonLd(parseJsonLdBlocks(html)) ??
         (await extractRecipeWithAiFromText(
           htmlToText(html),
           finalUrl.toString(),
+          args.userInstructions,
         )));
 
     const normalized = normalizeRecipeDraft(draft);
@@ -119,6 +125,7 @@ export const extractFromUrl = action({
 export const extractFromImages = action({
   args: {
     storageIds: v.array(v.id("_storage")),
+    userInstructions: v.optional(v.string()),
   },
   returns: extractedRecipeValidator,
   handler: async (ctx, args) => {
@@ -128,8 +135,10 @@ export const extractFromImages = action({
     }
 
     const imageParts = await loadImageParts(ctx, args.storageIds);
-    const { draft, sourceLabel } =
-      await extractRecipeWithAiFromImages(imageParts);
+    const { draft, sourceLabel } = await extractRecipeWithAiFromImages(
+      imageParts,
+      args.userInstructions,
+    );
 
     const normalized = normalizeRecipeDraft(draft);
     if (!isValidRecipeDraft(normalized)) {

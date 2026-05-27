@@ -168,9 +168,31 @@ export function resolvePhotoSourceLabel(
   return trimmed && trimmed.length > 0 ? trimmed : "Photo";
 }
 
+const MAX_USER_INSTRUCTIONS_LENGTH = 2_000;
+
+function appendUserInstructions(
+  basePrompt: string,
+  userInstructions?: string,
+): string {
+  const trimmed = userInstructions?.trim();
+  if (!trimmed || trimmed.length === 0) {
+    return basePrompt;
+  }
+
+  const limited =
+    trimmed.length > MAX_USER_INSTRUCTIONS_LENGTH
+      ? trimmed.slice(0, MAX_USER_INSTRUCTIONS_LENGTH)
+      : trimmed;
+
+  return (
+    `${basePrompt}\n\nInstructions supplémentaires de l'utilisateur :\n${limited}`
+  );
+}
+
 export async function extractRecipeWithAiFromText(
   pageText: string,
   sourceUrl: string,
+  userInstructions?: string,
 ): Promise<RecipeDraftData> {
   const openai = getOpenAiClient();
 
@@ -188,8 +210,10 @@ export async function extractRecipeWithAiFromText(
       },
       {
         role: "user",
-        content:
+        content: appendUserInstructions(
           `Extrais la recette depuis cette page (${sourceUrl}) :\n\n${pageText}`,
+          userInstructions,
+        ),
       },
     ],
     response_format: {
@@ -220,6 +244,7 @@ export type ImageContentPart = {
 
 export async function extractRecipeWithAiFromImages(
   imageParts: ImageContentPart[],
+  userInstructions?: string,
 ): Promise<{ draft: RecipeDraftData; sourceLabel: string }> {
   const openai = getOpenAiClient();
 
@@ -237,7 +262,10 @@ export async function extractRecipeWithAiFromImages(
         content: [
           {
             type: "text",
-            text: PHOTO_RECIPE_USER_PROMPT,
+            text: appendUserInstructions(
+              PHOTO_RECIPE_USER_PROMPT,
+              userInstructions,
+            ),
           },
           ...imageParts,
         ],

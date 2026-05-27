@@ -1,4 +1,5 @@
 import { Minus, Plus } from "lucide-react";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +15,14 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -28,7 +37,7 @@ type RecipeFormProps = {
   sourceUrl?: string;
   sourceLabel?: string;
   readOnlySource?: boolean;
-  onReanalyzeWithAi?: () => void;
+  onReanalyzeWithAi?: (userInstructions?: string) => void | Promise<void>;
   isReanalyzing?: boolean;
 };
 
@@ -51,6 +60,9 @@ export function RecipeForm({
   onReanalyzeWithAi,
   isReanalyzing = false,
 }: RecipeFormProps) {
+  const [reanalyzeDialogOpen, setReanalyzeDialogOpen] = useState(false);
+  const [reanalyzeInstructions, setReanalyzeInstructions] = useState("");
+
   function updateIngredient(
     index: number,
     field: "name" | "quantity" | "unit",
@@ -202,17 +214,73 @@ export function RecipeForm({
                     readOnly
                   />
                   {onReanalyzeWithAi ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="shrink-0"
-                      disabled={isReanalyzing}
-                      onClick={onReanalyzeWithAi}
-                    >
-                      {isReanalyzing
-                        ? "Analyse IA..."
-                        : "Ré-analyser avec l'IA"}
-                    </Button>
+                    <>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="shrink-0"
+                        disabled={isReanalyzing}
+                        onClick={() => setReanalyzeDialogOpen(true)}
+                      >
+                        {isReanalyzing
+                          ? "Analyse IA..."
+                          : "Ré-analyser avec l'IA"}
+                      </Button>
+                      <Dialog
+                        open={reanalyzeDialogOpen}
+                        onOpenChange={(open) => {
+                          setReanalyzeDialogOpen(open);
+                          if (!open) {
+                            setReanalyzeInstructions("");
+                          }
+                        }}
+                      >
+                        <DialogContent className="sm:max-w-md">
+                          <DialogHeader>
+                            <DialogTitle>Ré-analyser avec l&apos;IA</DialogTitle>
+                            <DialogDescription>
+                              Ajoutez des instructions pour guider
+                              l&apos;extraction (optionnel).
+                            </DialogDescription>
+                          </DialogHeader>
+                          <Textarea
+                            value={reanalyzeInstructions}
+                            onChange={(event) =>
+                              setReanalyzeInstructions(event.target.value)
+                            }
+                            placeholder="Ex. : conserver les sous-étapes détaillées, ignorer la section dessert..."
+                            rows={4}
+                            disabled={isReanalyzing}
+                          />
+                          <DialogFooter className="border-t-0 bg-transparent p-0 sm:justify-end">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              disabled={isReanalyzing}
+                              onClick={() => setReanalyzeDialogOpen(false)}
+                            >
+                              Annuler
+                            </Button>
+                            <Button
+                              type="button"
+                              disabled={isReanalyzing}
+                              onClick={() => {
+                                const trimmed = reanalyzeInstructions.trim();
+                                setReanalyzeDialogOpen(false);
+                                setReanalyzeInstructions("");
+                                void onReanalyzeWithAi(
+                                  trimmed.length > 0 ? trimmed : undefined,
+                                );
+                              }}
+                            >
+                              {isReanalyzing
+                                ? "Analyse IA..."
+                                : "Ré-analyser"}
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+                    </>
                   ) : null}
                 </div>
                 {sourceUrl ? (

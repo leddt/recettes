@@ -177,7 +177,7 @@ export function RecipeImportFlow() {
     }
   }
 
-  async function handleReanalyzeWithAi() {
+  async function handleReanalyzeWithAi(userInstructions?: string) {
     setError(null);
     setIsReanalyzing(true);
 
@@ -191,7 +191,10 @@ export function RecipeImportFlow() {
           return;
         }
 
-        const result = await extractFromImages({ storageIds });
+        const result = await extractFromImages({
+          storageIds,
+          userInstructions,
+        });
         setExtracted(result);
         setDraft(extractedToDraft(result));
         setUploadedPhotoIds(storageIds);
@@ -203,7 +206,11 @@ export function RecipeImportFlow() {
         return;
       }
 
-      const result = await extractFromUrl({ url: sourceUrl, forceAi: true });
+      const result = await extractFromUrl({
+        url: sourceUrl,
+        forceAi: true,
+        userInstructions,
+      });
       setExtracted(result);
       setDraft(extractedToDraft(result));
     } catch (analyzeError) {
