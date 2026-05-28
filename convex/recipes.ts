@@ -2,6 +2,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 
 import { internal } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 import {
   recipeDetailValidator,
   recipeDraftValidator,
@@ -9,6 +10,7 @@ import {
 } from "./lib/recipeValidators";
 import { buildRecipeSearchText } from "./lib/recipeSearchText";
 import { mutation, query } from "./_generated/server";
+import type { MutationCtx } from "./_generated/server";
 
 function validateRecipeDraft(args: {
   name: string;
@@ -37,6 +39,28 @@ function validateRecipeDraft(args: {
   }
 
   return { name, ingredients, steps };
+}
+
+async function deleteRecipeChatData(ctx: MutationCtx, recipeId: Id<"recipes">) {
+  const conversations = await ctx.db
+    .query("recipeChatConversations")
+    .withIndex("by_recipe", (q) => q.eq("recipeId", recipeId))
+    .collect();
+
+  for (const conversation of conversations) {
+    const messages = await ctx.db
+      .query("recipeChatMessages")
+      .withIndex("by_conversation", (q) =>
+        q.eq("conversationId", conversation._id),
+      )
+      .collect();
+
+    for (const message of messages) {
+      await ctx.db.delete("recipeChatMessages", message._id);
+    }
+
+    await ctx.db.delete("recipeChatConversations", conversation._id);
+  }
 }
 
 export const get = query({
@@ -159,5 +183,32 @@ export const create = mutation({
     });
 
     return recipeId;
+  },
+});
+
+export const remove = mutation({
+  args: { id: v.id("recipes") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (userId === null) {
+      throw new Error("Non authentifié.");
+    }
+
+    const recipe = await ctx.db.get("recipes", args.id);
+    if (recipe === null) {
+      throw new Error("Recette introuvable.");
+    }
+
+    await deleteRecipeChatData(ctx, args.id);
+
+    if (recipe.photos !== undefined) {
+      for (const photoId of recipe.photos) {
+        await ctx.storage.delete(photoId);
+      }
+    }
+
+    await ctx.db.delete("recipes", args.id);
+    return null;
   },
 });
