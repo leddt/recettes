@@ -18,6 +18,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import { DEFAULT_ACCOUNT } from "@/lib/defaults";
 import {
   getLoginErrorMessage,
@@ -103,7 +104,14 @@ export function LoginForm() {
         </CardContent>
         <CardFooter>
           <Button type="submit" disabled={isSubmitting} className="w-full">
-            {isSubmitting ? "Connexion..." : "Se connecter"}
+            {isSubmitting ? (
+              <>
+                <Spinner data-icon="inline-start" />
+                Connexion...
+              </>
+            ) : (
+              "Se connecter"
+            )}
           </Button>
         </CardFooter>
       </form>

@@ -68,8 +68,12 @@ async function loadImageParts(
       throw new Error("Une des photos est introuvable.");
     }
 
-    const buffer = Buffer.from(await blob.arrayBuffer());
-    const base64 = buffer.toString("base64");
+    const bytes = new Uint8Array(await blob.arrayBuffer());
+    let binary = "";
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]!);
+    }
+    const base64 = btoa(binary);
     imageParts.push({
       type: "image_url",
       image_url: {
