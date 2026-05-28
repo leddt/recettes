@@ -1,4 +1,4 @@
-import { useAction, useMutation, useQuery } from "convex/react";
+import { useAction, useQuery } from "convex/react";
 import { useCallback, useState } from "react";
 
 import { api } from "../../../../convex/_generated/api";
@@ -11,13 +11,28 @@ function getErrorMessage(error: unknown): string {
   return "Une erreur est survenue.";
 }
 
-export function useRecipeChat(recipeId: Id<"recipes">) {
-  const messages = useQuery(api.recipeChat.listMessages, { recipeId });
+export function useRecipeChatConversations(recipeId: Id<"recipes">) {
+  const conversations = useQuery(api.recipeChat.listConversations, { recipeId });
+
+  return {
+    conversations,
+    isLoading: conversations === undefined,
+  };
+}
+
+export function useRecipeChatThread(
+  recipeId: Id<"recipes">,
+  conversationId: Id<"recipeChatConversations"> | "new" | null,
+) {
+  const messages = useQuery(
+    api.recipeChat.listMessages,
+    conversationId !== null && conversationId !== "new"
+      ? { conversationId }
+      : "skip",
+  );
   const sendMessageAction = useAction(api.recipeChatActions.sendMessage);
-  const clearMessagesMutation = useMutation(api.recipeChat.clearMessages);
 
   const [isSending, setIsSending] = useState(false);
-  const [isClearing, setIsClearing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const sendMessage = useCallback(
@@ -25,7 +40,15 @@ export function useRecipeChat(recipeId: Id<"recipes">) {
       setError(null);
       setIsSending(true);
       try {
-        await sendMessageAction({ recipeId, content });
+        const newConversationId = await sendMessageAction({
+          recipeId,
+          conversationId:
+            conversationId === "new" || conversationId === null
+              ? undefined
+              : conversationId,
+          content,
+        });
+        return newConversationId;
       } catch (caught) {
         setError(getErrorMessage(caught));
         throw caught;
@@ -33,30 +56,18 @@ export function useRecipeChat(recipeId: Id<"recipes">) {
         setIsSending(false);
       }
     },
-    [recipeId, sendMessageAction],
+    [conversationId, recipeId, sendMessageAction],
   );
 
-  const clearMessages = useCallback(async () => {
-    setError(null);
-    setIsClearing(true);
-    try {
-      await clearMessagesMutation({ recipeId });
-    } catch (caught) {
-      setError(getErrorMessage(caught));
-      throw caught;
-    } finally {
-      setIsClearing(false);
-    }
-  }, [clearMessagesMutation, recipeId]);
-
   return {
-    messages,
-    isLoading: messages === undefined,
+    messages: conversationId === "new" || conversationId === null ? [] : messages,
+    isLoading:
+      conversationId !== null &&
+      conversationId !== "new" &&
+      messages === undefined,
     isSending,
-    isClearing,
     error,
     setError,
     sendMessage,
-    clearMessages,
   };
 }

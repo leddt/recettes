@@ -182,7 +182,7 @@ export function RecipeListPage() {
             <RecipeListSkeleton />
           ) : hasRecipes ? (
             <ItemGroup>
-              {displayedRecipes.map((recipe) => (
+              {(displayedRecipes as RecipeListEntry[]).map((recipe) => (
                 <RecipeListItem key={recipe._id} recipe={recipe} />
               ))}
             </ItemGroup>

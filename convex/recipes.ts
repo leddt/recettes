@@ -48,7 +48,7 @@ export const get = query({
       throw new Error("Non authentifié.");
     }
 
-    const recipe = await ctx.db.get(args.id);
+    const recipe = await ctx.db.get("recipes", args.id);
     if (recipe === null) {
       return null;
     }

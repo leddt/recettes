@@ -69,7 +69,7 @@ export const getRecipeForIndexing = internalQuery({
     v.null(),
   ),
   handler: async (ctx, args) => {
-    const recipe = await ctx.db.get(args.recipeId);
+    const recipe = await ctx.db.get("recipes", args.recipeId);
     if (recipe === null) {
       return null;
     }
@@ -149,7 +149,7 @@ export const getRecipeListItems = internalQuery({
   handler: async (ctx, args) => {
     return Promise.all(
       args.recipeIds.map(async (recipeId) => {
-        const recipe = await ctx.db.get(recipeId);
+        const recipe = await ctx.db.get("recipes", recipeId);
         if (recipe === null) {
           return null;
         }
@@ -167,12 +167,12 @@ export const setRecipeEmbedding = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const recipe = await ctx.db.get(args.recipeId);
+    const recipe = await ctx.db.get("recipes", args.recipeId);
     if (recipe === null) {
       return null;
     }
 
-    await ctx.db.patch(args.recipeId, {
+    await ctx.db.patch("recipes", args.recipeId, {
       embedding: args.embedding,
     });
 
@@ -190,12 +190,12 @@ export const backfillSearchText = internalMutation({
     });
 
     for (const recipeId of recipeIds) {
-      const recipe = await ctx.db.get(recipeId);
+      const recipe = await ctx.db.get("recipes", recipeId);
       if (recipe === null) {
         continue;
       }
 
-      await ctx.db.patch(recipeId, {
+      await ctx.db.patch("recipes", recipeId, {
         searchText: buildRecipeSearchText({
           name: recipe.name,
           notes: recipe.notes,
@@ -319,7 +319,9 @@ export const search = action({
 
     if (vectorMatches.length > 0 && results.length < limit) {
       const topScore = vectorMatches[0]._score;
-      const vectorIds = vectorMatches.map((match) => match._id);
+      const vectorIds = vectorMatches.map(
+        (match: { _id: Id<"recipes">; _score: number }) => match._id,
+      );
       const listItems = await ctx.runQuery(internal.recipeSearch.getRecipeListItems, {
         recipeIds: vectorIds,
       });

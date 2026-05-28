@@ -4,9 +4,11 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 
 import { internal } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 import { action } from "./_generated/server";
 import { askRecipeQuestion } from "./lib/recipeChatAi";
 import { buildRecipeChatContext } from "./lib/recipeChatContext";
+import { conversationTitleFromMessage } from "./lib/recipeChatTitle";
 
 const MAX_CONTEXT_MESSAGES = 40;
 const MAX_USER_MESSAGE_LENGTH = 2_000;
@@ -27,10 +29,11 @@ function validateUserContent(content: string): string {
 export const sendMessage = action({
   args: {
     recipeId: v.id("recipes"),
+    conversationId: v.optional(v.id("recipeChatConversations")),
     content: v.string(),
   },
-  returns: v.null(),
-  handler: async (ctx, args) => {
+  returns: v.id("recipeChatConversations"),
+  handler: async (ctx, args): Promise<Id<"recipeChatConversations">> => {
     const userId = await getAuthUserId(ctx);
     if (userId === null) {
       throw new Error("Non authentifié.");
@@ -46,21 +49,40 @@ export const sendMessage = action({
     }
 
     const now = Date.now();
+    let conversationId: Id<"recipeChatConversations"> | undefined = args.conversationId;
+
+    if (conversationId !== undefined) {
+      const conversation = await ctx.runQuery(internal.recipeChat.getConversation, {
+        conversationId,
+      });
+      if (conversation === null || conversation.recipeId !== args.recipeId) {
+        throw new Error("Question introuvable.");
+      }
+    } else {
+      conversationId = await ctx.runMutation(internal.recipeChat.createConversation, {
+        recipeId: args.recipeId,
+        title: conversationTitleFromMessage(trimmed),
+        createdAt: now,
+      });
+    }
+
     await ctx.runMutation(internal.recipeChat.insertMessage, {
-      recipeId: args.recipeId,
+      conversationId,
       role: "user",
       content: trimmed,
       createdAt: now,
     });
 
     const storedMessages = await ctx.runQuery(internal.recipeChat.listMessagesForChat, {
-      recipeId: args.recipeId,
+      conversationId,
     });
 
-    const contextMessages = storedMessages.slice(-MAX_CONTEXT_MESSAGES).map((message) => ({
-      role: message.role,
-      content: message.content,
-    }));
+    const contextMessages = storedMessages
+      .slice(-MAX_CONTEXT_MESSAGES)
+      .map((message: { role: "user" | "assistant"; content: string }) => ({
+        role: message.role,
+        content: message.content,
+      }));
 
     const recipeContext = buildRecipeChatContext(recipe);
     const reply = await askRecipeQuestion({
@@ -68,13 +90,19 @@ export const sendMessage = action({
       messages: contextMessages,
     });
 
+    const replyAt = Date.now();
     await ctx.runMutation(internal.recipeChat.insertMessage, {
-      recipeId: args.recipeId,
+      conversationId,
       role: "assistant",
       content: reply,
-      createdAt: Date.now(),
+      createdAt: replyAt,
     });
 
-    return null;
+    await ctx.runMutation(internal.recipeChat.touchConversation, {
+      conversationId,
+      updatedAt: replyAt,
+    });
+
+    return conversationId;
   },
 });

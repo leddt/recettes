@@ -1,8 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { SendHorizontal, Trash2 } from "lucide-react";
+import { ArrowLeft, SendHorizontal } from "lucide-react";
 
+import { RecipeChatConversationList } from "@/components/recipes/chat/recipe-chat-conversation-list";
 import { RecipeChatMessage } from "@/components/recipes/chat/recipe-chat-message";
-import { useRecipeChat } from "@/components/recipes/chat/use-recipe-chat";
+import {
+  useRecipeChatConversations,
+  useRecipeChatThread,
+} from "@/components/recipes/chat/use-recipe-chat";
 import { RecipeErrorAlert } from "@/components/recipes/recipe-error-alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,6 +35,16 @@ const SUGGESTED_QUESTIONS = [
   "Quels ustensiles me faut-il ?",
 ] as const;
 
+type ChatView = "list" | "thread";
+
+type ActiveConversation = Id<"recipeChatConversations"> | "new" | null;
+
+type ConversationListItem = {
+  _id: Id<"recipeChatConversations">;
+  title: string;
+  updatedAt: number;
+};
+
 type RecipeChatSheetProps = {
   recipeId: Id<"recipes">;
   recipeName: string;
@@ -44,15 +58,23 @@ export function RecipeChatSheet({
   open,
   onOpenChange,
 }: RecipeChatSheetProps) {
+  const [view, setView] = useState<ChatView>("list");
+  const [activeConversationId, setActiveConversationId] =
+    useState<ActiveConversation>(null);
+
+  const { conversations, isLoading: isLoadingConversations } =
+    useRecipeChatConversations(recipeId);
+
+  const threadConversationId =
+    view === "thread" ? activeConversationId : null;
+
   const {
     messages,
-    isLoading,
+    isLoading: isLoadingMessages,
     isSending,
-    isClearing,
     error,
     sendMessage,
-    clearMessages,
-  } = useRecipeChat(recipeId);
+  } = useRecipeChatThread(recipeId, threadConversationId);
 
   const [draft, setDraft] = useState("");
   const scrollAnchorRef = useRef<HTMLDivElement>(null);
@@ -60,10 +82,46 @@ export function RecipeChatSheet({
 
   useEffect(() => {
     if (!open) {
+      setView("list");
+      setActiveConversationId(null);
+      setDraft("");
+    }
+  }, [open]);
+
+  useEffect(() => {
+    if (!open || isLoadingConversations || conversations === undefined) {
+      return;
+    }
+    if (conversations.length === 0) {
+      setView("thread");
+      setActiveConversationId("new");
+    }
+  }, [open, isLoadingConversations, conversations]);
+
+  useEffect(() => {
+    if (!open || view !== "thread") {
       return;
     }
     scrollAnchorRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [open, messages, isSending]);
+  }, [open, view, messages, isSending]);
+
+  function openConversationList() {
+    setView("list");
+    setActiveConversationId(null);
+    setDraft("");
+  }
+
+  function startNewConversation() {
+    setView("thread");
+    setActiveConversationId("new");
+    setDraft("");
+  }
+
+  function openExistingConversation(conversationId: Id<"recipeChatConversations">) {
+    setView("thread");
+    setActiveConversationId(conversationId);
+    setDraft("");
+  }
 
   async function handleSend(content: string) {
     const trimmed = content.trim();
@@ -73,7 +131,10 @@ export function RecipeChatSheet({
 
     setDraft("");
     try {
-      await sendMessage(trimmed);
+      const conversationId = await sendMessage(trimmed);
+      if (activeConversationId === "new") {
+        setActiveConversationId(conversationId);
+      }
     } catch {
       setDraft(trimmed);
     }
@@ -91,7 +152,22 @@ export function RecipeChatSheet({
     textareaRef.current?.focus();
   }
 
-  const hasMessages = messages !== undefined && messages.length > 0;
+  const activeTitle =
+    activeConversationId !== null &&
+    activeConversationId !== "new" &&
+    conversations !== undefined
+      ? (conversations as ConversationListItem[]).find(
+          (c) => c._id === activeConversationId,
+        )?.title
+      : undefined;
+
+  const hasMessages = Array.isArray(messages) && messages.length > 0;
+  const showEmptyThread =
+    view === "thread" &&
+    !isLoadingMessages &&
+    !hasMessages &&
+    !isSending &&
+    activeConversationId === "new";
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -100,142 +176,130 @@ export function RecipeChatSheet({
         className="flex w-full flex-col gap-0 p-0 sm:max-w-md"
       >
         <SheetHeader className="shrink-0 border-b pr-12">
-          <SheetTitle>Question sur la recette</SheetTitle>
-          <SheetDescription className="line-clamp-2">{recipeName}</SheetDescription>
+          <div className="flex items-center gap-2">
+            {view === "thread" ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                className="-ml-2"
+                onClick={openConversationList}
+                aria-label="Retour aux questions"
+              >
+                <ArrowLeft />
+              </Button>
+            ) : null}
+            <div className="min-w-0 flex-1">
+              <SheetTitle>
+                {view === "list"
+                  ? "Questions"
+                  : activeConversationId === "new"
+                    ? "Nouvelle question"
+                    : (activeTitle ?? "Question")}
+              </SheetTitle>
+              <SheetDescription className="line-clamp-2">
+                {recipeName}
+              </SheetDescription>
+            </div>
+          </div>
         </SheetHeader>
 
         <div className="flex min-h-0 flex-1 flex-col">
-          <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
-            {error ? <RecipeErrorAlert message={error} /> : null}
+          {view === "list" ? (
+            <div className="min-h-0 flex-1 overflow-y-auto p-4">
+              <RecipeChatConversationList
+                conversations={conversations}
+                isLoading={isLoadingConversations}
+                onSelect={openExistingConversation}
+                onNewConversation={startNewConversation}
+              />
+            </div>
+          ) : (
+            <>
+              <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
+                {error ? <RecipeErrorAlert message={error} /> : null}
 
-            {isLoading ? (
-              <div className="flex flex-col gap-3">
-                <Skeleton className="h-16 w-4/5" />
-                <Skeleton className="ml-auto h-12 w-3/5" />
-              </div>
-            ) : null}
+                {isLoadingMessages ? (
+                  <div className="flex flex-col gap-3">
+                    <Skeleton className="h-16 w-4/5" />
+                    <Skeleton className="ml-auto h-12 w-3/5" />
+                  </div>
+                ) : null}
 
-            {!isLoading && !hasMessages ? (
-              <div className="flex flex-col gap-3">
-                <p className="text-sm text-muted-foreground">
-                  Posez une question sur cette recette : substitutions,
-                  conservation, accompagnements, adaptation des portions…
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {SUGGESTED_QUESTIONS.map((question) => (
-                    <Badge
-                      key={question}
-                      variant="outline"
-                      className="cursor-pointer font-normal"
-                      render={
-                        <button
-                          type="button"
-                          disabled={isSending}
-                          onClick={() => applySuggestion(question)}
-                        />
-                      }
-                    >
-                      {question}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            ) : null}
+                {showEmptyThread ? (
+                  <div className="flex flex-col gap-3">
+                    <p className="text-sm text-muted-foreground">
+                      Posez une question sur cette recette : substitutions,
+                      conservation, accompagnements, adaptation des portions…
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {SUGGESTED_QUESTIONS.map((question) => (
+                        <Badge
+                          key={question}
+                          variant="outline"
+                          className="cursor-pointer font-normal"
+                          render={
+                            <button
+                              type="button"
+                              onClick={() => applySuggestion(question)}
+                            />
+                          }
+                        >
+                          {question}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
 
-            {!isLoading && hasMessages
-              ? messages.map((message) => (
-                  <RecipeChatMessage
-                    key={message._id}
-                    role={message.role}
-                    content={message.content}
-                  />
-                ))
-              : null}
-
-            {isSending ? (
-              <div className="flex justify-start">
-                <div className="flex items-center gap-2 rounded-xl bg-muted px-3 py-2 text-sm text-muted-foreground">
-                  <Spinner />
-                  Réflexion…
-                </div>
-              </div>
-            ) : null}
-
-            <div ref={scrollAnchorRef} />
-          </div>
-
-          {hasMessages ? (
-            <div className="shrink-0 border-t px-4 pt-2">
-              <div className="flex flex-wrap gap-2 pb-2">
-                {SUGGESTED_QUESTIONS.slice(0, 3).map((question) => (
-                  <Badge
-                    key={question}
-                    variant="outline"
-                    className="cursor-pointer font-normal"
-                    render={
-                      <button
-                        type="button"
-                        disabled={isSending}
-                        onClick={() => applySuggestion(question)}
+                {!isLoadingMessages && hasMessages
+                  ? messages.map((message) => (
+                      <RecipeChatMessage
+                        key={message._id}
+                        role={message.role}
+                        content={message.content}
                       />
-                    }
-                  >
-                    {question}
-                  </Badge>
-                ))}
+                    ))
+                  : null}
+
+                {isSending ? (
+                  <div className="flex justify-start">
+                    <div className="flex items-center gap-2 rounded-xl bg-muted px-3 py-2 text-sm text-muted-foreground">
+                      <Spinner />
+                      Réflexion…
+                    </div>
+                  </div>
+                ) : null}
+
+                <div ref={scrollAnchorRef} />
               </div>
-            </div>
-          ) : null}
 
-          <div className="shrink-0 border-t p-4">
-            <div className="flex flex-col gap-2">
-              <InputGroup className="h-auto min-h-0 items-end">
-                <InputGroupTextarea
-                  ref={textareaRef}
-                  value={draft}
-                  onChange={(event) => setDraft(event.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Votre question…"
-                  rows={2}
-                  disabled={isSending}
-                  className="min-h-[4.5rem] py-2"
-                />
-                <InputGroupAddon align="block-end" className="pb-2">
-                  <InputGroupButton
-                    size="icon-sm"
-                    disabled={isSending || draft.trim().length === 0}
-                    onClick={() => void handleSend(draft)}
-                    aria-label="Envoyer"
-                  >
-                    {isSending ? <Spinner /> : <SendHorizontal />}
-                  </InputGroupButton>
-                </InputGroupAddon>
-              </InputGroup>
-
-              {hasMessages ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="self-start"
-                  disabled={isSending || isClearing}
-                  onClick={() => void clearMessages()}
-                >
-                  {isClearing ? (
-                    <>
-                      <Spinner data-icon="inline-start" />
-                      Effacement…
-                    </>
-                  ) : (
-                    <>
-                      <Trash2 data-icon="inline-start" />
-                      Effacer l&apos;historique
-                    </>
-                  )}
-                </Button>
-              ) : null}
-            </div>
-          </div>
+              <div className="shrink-0 border-t p-4">
+                <InputGroup className="h-auto min-h-0 items-end">
+                  <InputGroupTextarea
+                    ref={textareaRef}
+                    value={draft}
+                    onChange={(event) => setDraft(event.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Votre question…"
+                    rows={2}
+                    disabled={isSending}
+                    className="min-h-[4.5rem] py-2"
+                  />
+                  <InputGroupAddon align="block-end" className="pb-2">
+                    <InputGroupButton
+                      size="icon-sm"
+                      disabled={isSending || draft.trim().length === 0}
+                      onClick={() => void handleSend(draft)}
+                      aria-label="Envoyer"
+                    >
+                      {isSending ? <Spinner /> : <SendHorizontal />}
+                    </InputGroupButton>
+                  </InputGroupAddon>
+                </InputGroup>
+              </div>
+            </>
+          )}
         </div>
       </SheetContent>
     </Sheet>

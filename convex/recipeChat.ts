@@ -2,15 +2,26 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 
 import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
+import type { MutationCtx, QueryCtx } from "./_generated/server";
 
 const MAX_STORED_MESSAGES = 100;
+const MAX_CONVERSATIONS = 50;
 
 const chatMessageValidator = v.object({
   _id: v.id("recipeChatMessages"),
-  recipeId: v.id("recipes"),
+  conversationId: v.id("recipeChatConversations"),
   role: v.union(v.literal("user"), v.literal("assistant")),
   content: v.string(),
   createdAt: v.number(),
+});
+
+const conversationListItemValidator = v.object({
+  _id: v.id("recipeChatConversations"),
+  recipeId: v.id("recipes"),
+  title: v.string(),
+  createdAt: v.number(),
+  updatedAt: v.number(),
 });
 
 const recipeForChatValidator = v.union(
@@ -39,11 +50,18 @@ const recipeForChatValidator = v.union(
   v.null(),
 );
 
+async function assertRecipeExists(ctx: QueryCtx | MutationCtx, recipeId: Id<"recipes">) {
+  const recipe = await ctx.db.get("recipes", recipeId);
+  if (recipe === null) {
+    throw new Error("Recette introuvable.");
+  }
+}
+
 export const getRecipeForChat = internalQuery({
   args: { recipeId: v.id("recipes") },
   returns: recipeForChatValidator,
   handler: async (ctx, args) => {
-    const recipe = await ctx.db.get(args.recipeId);
+    const recipe = await ctx.db.get("recipes", args.recipeId);
     if (recipe === null) {
       return null;
     }
@@ -63,8 +81,58 @@ export const getRecipeForChat = internalQuery({
   },
 });
 
+export const getConversation = internalQuery({
+  args: { conversationId: v.id("recipeChatConversations") },
+  returns: v.union(conversationListItemValidator, v.null()),
+  handler: async (ctx, args) => {
+    const conversation = await ctx.db.get("recipeChatConversations", args.conversationId);
+    if (conversation === null) {
+      return null;
+    }
+
+    return {
+      _id: conversation._id,
+      recipeId: conversation.recipeId,
+      title: conversation.title,
+      createdAt: conversation.createdAt,
+      updatedAt: conversation.updatedAt,
+    };
+  },
+});
+
+export const createConversation = internalMutation({
+  args: {
+    recipeId: v.id("recipes"),
+    title: v.string(),
+    createdAt: v.number(),
+  },
+  returns: v.id("recipeChatConversations"),
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("recipeChatConversations", {
+      recipeId: args.recipeId,
+      title: args.title,
+      createdAt: args.createdAt,
+      updatedAt: args.createdAt,
+    });
+  },
+});
+
+export const touchConversation = internalMutation({
+  args: {
+    conversationId: v.id("recipeChatConversations"),
+    updatedAt: v.number(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    await ctx.db.patch("recipeChatConversations", args.conversationId, {
+      updatedAt: args.updatedAt,
+    });
+    return null;
+  },
+});
+
 export const listMessagesForChat = internalQuery({
-  args: { recipeId: v.id("recipes") },
+  args: { conversationId: v.id("recipeChatConversations") },
   returns: v.array(
     v.object({
       role: v.union(v.literal("user"), v.literal("assistant")),
@@ -75,7 +143,7 @@ export const listMessagesForChat = internalQuery({
   handler: async (ctx, args) => {
     const rows = await ctx.db
       .query("recipeChatMessages")
-      .withIndex("by_recipe", (q) => q.eq("recipeId", args.recipeId))
+      .withIndex("by_conversation", (q) => q.eq("conversationId", args.conversationId))
       .order("asc")
       .take(MAX_STORED_MESSAGES);
 
@@ -89,7 +157,7 @@ export const listMessagesForChat = internalQuery({
 
 export const insertMessage = internalMutation({
   args: {
-    recipeId: v.id("recipes"),
+    conversationId: v.id("recipeChatConversations"),
     role: v.union(v.literal("user"), v.literal("assistant")),
     content: v.string(),
     createdAt: v.number(),
@@ -97,7 +165,7 @@ export const insertMessage = internalMutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     await ctx.db.insert("recipeChatMessages", {
-      recipeId: args.recipeId,
+      conversationId: args.conversationId,
       role: args.role,
       content: args.content,
       createdAt: args.createdAt,
@@ -106,8 +174,35 @@ export const insertMessage = internalMutation({
   },
 });
 
-export const listMessages = query({
+export const listConversations = query({
   args: { recipeId: v.id("recipes") },
+  returns: v.array(conversationListItemValidator),
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (userId === null) {
+      throw new Error("Non authentifié.");
+    }
+
+    await assertRecipeExists(ctx, args.recipeId);
+
+    const rows = await ctx.db
+      .query("recipeChatConversations")
+      .withIndex("by_recipe", (q) => q.eq("recipeId", args.recipeId))
+      .order("desc")
+      .take(MAX_CONVERSATIONS);
+
+    return rows.map((row) => ({
+      _id: row._id,
+      recipeId: row.recipeId,
+      title: row.title,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+    }));
+  },
+});
+
+export const listMessages = query({
+  args: { conversationId: v.id("recipeChatConversations") },
   returns: v.array(chatMessageValidator),
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -115,20 +210,20 @@ export const listMessages = query({
       throw new Error("Non authentifié.");
     }
 
-    const recipe = await ctx.db.get(args.recipeId);
-    if (recipe === null) {
-      throw new Error("Recette introuvable.");
+    const conversation = await ctx.db.get("recipeChatConversations", args.conversationId);
+    if (conversation === null) {
+      throw new Error("Question introuvable.");
     }
 
     const rows = await ctx.db
       .query("recipeChatMessages")
-      .withIndex("by_recipe", (q) => q.eq("recipeId", args.recipeId))
+      .withIndex("by_conversation", (q) => q.eq("conversationId", args.conversationId))
       .order("asc")
       .take(MAX_STORED_MESSAGES);
 
     return rows.map((row) => ({
       _id: row._id,
-      recipeId: row.recipeId,
+      conversationId: row.conversationId,
       role: row.role,
       content: row.content,
       createdAt: row.createdAt,
@@ -136,8 +231,8 @@ export const listMessages = query({
   },
 });
 
-export const clearMessages = mutation({
-  args: { recipeId: v.id("recipes") },
+export const deleteConversation = mutation({
+  args: { conversationId: v.id("recipeChatConversations") },
   returns: v.null(),
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -145,20 +240,21 @@ export const clearMessages = mutation({
       throw new Error("Non authentifié.");
     }
 
-    const recipe = await ctx.db.get(args.recipeId);
-    if (recipe === null) {
-      throw new Error("Recette introuvable.");
+    const conversation = await ctx.db.get("recipeChatConversations", args.conversationId);
+    if (conversation === null) {
+      throw new Error("Question introuvable.");
     }
 
-    const rows = await ctx.db
+    const messages = await ctx.db
       .query("recipeChatMessages")
-      .withIndex("by_recipe", (q) => q.eq("recipeId", args.recipeId))
+      .withIndex("by_conversation", (q) => q.eq("conversationId", args.conversationId))
       .collect();
 
-    for (const row of rows) {
-      await ctx.db.delete(row._id);
+    for (const message of messages) {
+      await ctx.db.delete("recipeChatMessages", message._id);
     }
 
+    await ctx.db.delete("recipeChatConversations", args.conversationId);
     return null;
   },
 });

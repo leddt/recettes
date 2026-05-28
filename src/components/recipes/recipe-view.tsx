@@ -3,7 +3,9 @@ import { ChefHat, MessageCircle } from "lucide-react";
 import { useState } from "react";
 
 import { RecipeChatSheet } from "@/components/recipes/chat/recipe-chat-sheet";
+import { useRecipeChatConversations } from "@/components/recipes/chat/use-recipe-chat";
 import { RecipeHeader } from "@/components/recipes/recipe-header";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { RecipeIngredientsList } from "@/components/recipes/recipe-ingredients-list";
 import { RecipeStepsList } from "@/components/recipes/recipe-steps-list";
@@ -40,6 +42,8 @@ function RecipeViewSkeleton() {
 export function RecipeView({ recipeId }: RecipeViewProps) {
   const [chatOpen, setChatOpen] = useState(false);
   const recipe = useQuery(api.recipes.get, { id: recipeId });
+  const { conversations } = useRecipeChatConversations(recipeId);
+  const conversationCount = conversations?.length ?? 0;
 
   if (recipe === undefined) {
     return <RecipeViewSkeleton />;
@@ -64,7 +68,9 @@ export function RecipeView({ recipeId }: RecipeViewProps) {
   }
 
   const photoUrls =
-    recipe.photoUrls?.filter((url): url is string => url !== null) ?? [];
+    recipe.photoUrls?.filter(
+      (url: string | null): url is string => url !== null,
+    ) ?? [];
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
@@ -89,6 +95,11 @@ export function RecipeView({ recipeId }: RecipeViewProps) {
         >
           <MessageCircle data-icon="inline-start" />
           Poser une question
+          {conversationCount > 0 ? (
+            <Badge variant="secondary" className="min-w-5 justify-center px-1.5">
+              {conversationCount}
+            </Badge>
+          ) : null}
         </Button>
       </div>
 

@@ -16,6 +16,7 @@ import type * as lib_htmlParse from "../lib/htmlParse.js";
 import type * as lib_recipeAi from "../lib/recipeAi.js";
 import type * as lib_recipeChatAi from "../lib/recipeChatAi.js";
 import type * as lib_recipeChatContext from "../lib/recipeChatContext.js";
+import type * as lib_recipeChatTitle from "../lib/recipeChatTitle.js";
 import type * as lib_recipeEmbeddings from "../lib/recipeEmbeddings.js";
 import type * as lib_recipeImageLimits from "../lib/recipeImageLimits.js";
 import type * as lib_recipeJsonLd from "../lib/recipeJsonLd.js";
@@ -45,6 +46,7 @@ declare const fullApi: ApiFromModules<{
   "lib/recipeAi": typeof lib_recipeAi;
   "lib/recipeChatAi": typeof lib_recipeChatAi;
   "lib/recipeChatContext": typeof lib_recipeChatContext;
+  "lib/recipeChatTitle": typeof lib_recipeChatTitle;
   "lib/recipeEmbeddings": typeof lib_recipeEmbeddings;
   "lib/recipeImageLimits": typeof lib_recipeImageLimits;
   "lib/recipeJsonLd": typeof lib_recipeJsonLd;

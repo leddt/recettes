@@ -9,6 +9,6 @@ export const viewer = query({
       return null;
     }
 
-    return await ctx.db.get(userId);
+    return await ctx.db.get("users", userId);
   },
 });
