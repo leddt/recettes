@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, SendHorizontal } from "lucide-react";
+import { useMutation } from "convex/react";
 
+import { RecipeChatDeleteDialog } from "@/components/recipes/chat/recipe-chat-delete-dialog";
 import { RecipeChatConversationList } from "@/components/recipes/chat/recipe-chat-conversation-list";
 import { RecipeChatMessage } from "@/components/recipes/chat/recipe-chat-message";
 import {
@@ -25,6 +27,7 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
+import { api } from "../../../../convex/_generated/api";
 import type { Id } from "../../../../convex/_generated/dataModel";
 
 const SUGGESTED_QUESTIONS = [
@@ -73,10 +76,16 @@ export function RecipeChatSheet({
     isLoading: isLoadingMessages,
     isSending,
     error,
+    setError,
     sendMessage,
   } = useRecipeChatThread(recipeId, threadConversationId);
+  const deleteConversation = useMutation(api.recipeChat.deleteConversation);
 
   const [draft, setDraft] = useState("");
+  const [deletingConversationId, setDeletingConversationId] =
+    useState<Id<"recipeChatConversations"> | null>(null);
+  const [conversationToDelete, setConversationToDelete] =
+    useState<ConversationListItem | null>(null);
   const scrollAnchorRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -152,6 +161,42 @@ export function RecipeChatSheet({
     textareaRef.current?.focus();
   }
 
+  async function handleDeleteConversation(
+    conversationId: Id<"recipeChatConversations">,
+  ) {
+    if (deletingConversationId !== null) {
+      return;
+    }
+    setError(null);
+    setDeletingConversationId(conversationId);
+    try {
+      await deleteConversation({ conversationId });
+      if (activeConversationId === conversationId) {
+        openConversationList();
+      }
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "La suppression de la question a échoué.",
+      );
+    } finally {
+      setDeletingConversationId(null);
+    }
+  }
+
+  function requestDeleteConversation(
+    conversationId: Id<"recipeChatConversations">,
+  ) {
+    if (!Array.isArray(conversations)) {
+      return;
+    }
+    const targetConversation =
+      conversations.find((conversation) => conversation._id === conversationId) ??
+      null;
+    setConversationToDelete(targetConversation);
+  }
+
   const activeTitle =
     activeConversationId !== null &&
     activeConversationId !== "new" &&
@@ -171,6 +216,27 @@ export function RecipeChatSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
+      <RecipeChatDeleteDialog
+        open={conversationToDelete !== null}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) {
+            setConversationToDelete(null);
+          }
+        }}
+        conversationTitle={conversationToDelete?.title ?? "cette question"}
+        isDeleting={
+          conversationToDelete !== null &&
+          deletingConversationId === conversationToDelete._id
+        }
+        onConfirm={() => {
+          if (conversationToDelete === null) {
+            return;
+          }
+          void handleDeleteConversation(conversationToDelete._id).finally(() => {
+            setConversationToDelete(null);
+          });
+        }}
+      />
       <SheetContent
         side="right"
         className="flex w-full flex-col gap-0 p-0 sm:max-w-md"
@@ -207,10 +273,13 @@ export function RecipeChatSheet({
         <div className="flex min-h-0 flex-1 flex-col">
           {view === "list" ? (
             <div className="min-h-0 flex-1 overflow-y-auto p-4">
+              {error ? <RecipeErrorAlert message={error} /> : null}
               <RecipeChatConversationList
                 conversations={conversations}
                 isLoading={isLoadingConversations}
+                deletingConversationId={deletingConversationId}
                 onSelect={openExistingConversation}
+                onDelete={requestDeleteConversation}
                 onNewConversation={startNewConversation}
               />
             </div>

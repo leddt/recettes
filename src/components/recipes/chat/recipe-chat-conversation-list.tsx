@@ -1,7 +1,8 @@
-import { MessageSquarePlus } from "lucide-react";
+import { MessageSquarePlus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
+  ItemActions,
   Item,
   ItemContent,
   ItemDescription,
@@ -20,7 +21,9 @@ type Conversation = {
 type RecipeChatConversationListProps = {
   conversations: Conversation[] | undefined;
   isLoading: boolean;
+  deletingConversationId: Id<"recipeChatConversations"> | null;
   onSelect: (conversationId: Id<"recipeChatConversations">) => void;
+  onDelete: (conversationId: Id<"recipeChatConversations">) => void;
   onNewConversation: () => void;
 };
 
@@ -34,7 +37,9 @@ function formatConversationDate(timestamp: number): string {
 export function RecipeChatConversationList({
   conversations,
   isLoading,
+  deletingConversationId,
   onSelect,
+  onDelete,
   onNewConversation,
 }: RecipeChatConversationListProps) {
   if (isLoading) {
@@ -63,13 +68,16 @@ export function RecipeChatConversationList({
               key={conversation._id}
               variant="outline"
               size="sm"
-              render={
-                <button
-                  type="button"
-                  className="w-full text-left"
-                  onClick={() => onSelect(conversation._id)}
-                />
-              }
+              role="button"
+              tabIndex={0}
+              className="cursor-pointer"
+              onClick={() => onSelect(conversation._id)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  onSelect(conversation._id);
+                }
+              }}
             >
               <ItemContent>
                 <ItemTitle className="line-clamp-2">{conversation.title}</ItemTitle>
@@ -77,6 +85,21 @@ export function RecipeChatConversationList({
                   {formatConversationDate(conversation.updatedAt)}
                 </ItemDescription>
               </ItemContent>
+              <ItemActions>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  disabled={deletingConversationId === conversation._id}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onDelete(conversation._id);
+                  }}
+                  aria-label={`Supprimer la question "${conversation.title}"`}
+                >
+                  <Trash2 />
+                </Button>
+              </ItemActions>
             </Item>
           ))}
         </ItemGroup>
