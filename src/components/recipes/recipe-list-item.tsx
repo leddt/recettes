@@ -32,7 +32,7 @@ export function RecipeListItem({ recipe }: RecipeListItemProps) {
     recipe.tags.length > 0 ? recipe.tags.join(", ") : undefined;
 
   return (
-    <Item variant="outline" render={<Link to={`/recipes/${recipe._id}`} />}>
+    <Item variant="outline" size="sm" render={<Link to={`/recipes/${recipe._id}`} />}>
       <ItemContent>
         <ItemTitle>
           {recipe.name}

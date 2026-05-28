@@ -18,7 +18,7 @@ export function RecipeIngredientsList({
       </FieldDescription>
       <ItemGroup>
         {ingredients.map((ingredient, index) => (
-          <Item key={`${ingredient.name}-${index}`} variant="muted">
+          <Item key={`${ingredient.name}-${index}`} size="xs" variant="outline">
             <ItemContent>
               <ItemTitle className="font-normal">
                 {formatIngredient(ingredient)}

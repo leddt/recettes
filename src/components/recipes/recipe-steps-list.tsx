@@ -4,6 +4,7 @@ import {
   Item,
   ItemContent,
   ItemGroup,
+  ItemMedia,
 } from "@/components/ui/item";
 import type { RecipeDraft } from "@/lib/recipe-types";
 
@@ -20,8 +21,10 @@ export function RecipeStepsList({ steps }: RecipeStepsListProps) {
       </FieldDescription>
       <ItemGroup>
         {steps.map((step, index) => (
-          <Item key={`step-${index}`} variant="muted">
-            <StepNumber index={index} />
+          <Item key={`step-${index}`} size="xs">
+            <ItemMedia>
+              <StepNumber index={index} />
+            </ItemMedia>
             <ItemContent>
               <p className="whitespace-pre-wrap text-sm leading-relaxed">
                 {step.text}
