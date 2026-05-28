@@ -2,6 +2,7 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { useQuery } from "convex/react";
 import { Link, Outlet, useLocation } from "react-router";
 
+import { ThemeDropdown } from "@/components/layout/theme-dropdown";
 import { Button } from "@/components/ui/button";
 import { api } from "../../../convex/_generated/api";
 
@@ -35,6 +36,7 @@ export function AppLayout() {
           <Button variant="outline" onClick={() => void signOut()}>
             Se déconnecter
           </Button>
+          <ThemeDropdown />
         </div>
       </header>
 
