@@ -1,7 +1,10 @@
 import { useQuery } from "convex/react";
-import { ChefHat } from "lucide-react";
+import { ChefHat, MessageCircle } from "lucide-react";
+import { useState } from "react";
 
+import { RecipeChatSheet } from "@/components/recipes/chat/recipe-chat-sheet";
 import { RecipeHeader } from "@/components/recipes/recipe-header";
+import { Button } from "@/components/ui/button";
 import { RecipeIngredientsList } from "@/components/recipes/recipe-ingredients-list";
 import { RecipeStepsList } from "@/components/recipes/recipe-steps-list";
 import {
@@ -35,6 +38,7 @@ function RecipeViewSkeleton() {
 }
 
 export function RecipeView({ recipeId }: RecipeViewProps) {
+  const [chatOpen, setChatOpen] = useState(false);
   const recipe = useQuery(api.recipes.get, { id: recipeId });
 
   if (recipe === undefined) {
@@ -64,17 +68,35 @@ export function RecipeView({ recipeId }: RecipeViewProps) {
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
-      <RecipeHeader
-        name={recipe.name}
-        servings={recipe.servings}
-        prepTime={recipe.prepTime}
-        cookTime={recipe.cookTime}
-        totalTime={recipe.totalTime}
-        tags={recipe.tags}
-        sourceUrl={recipe.sourceUrl}
-        sourceLabel={recipe.sourceLabel}
-        photoUrls={photoUrls}
-        notes={recipe.notes}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <RecipeHeader
+          name={recipe.name}
+          servings={recipe.servings}
+          prepTime={recipe.prepTime}
+          cookTime={recipe.cookTime}
+          totalTime={recipe.totalTime}
+          tags={recipe.tags}
+          sourceUrl={recipe.sourceUrl}
+          sourceLabel={recipe.sourceLabel}
+          photoUrls={photoUrls}
+          notes={recipe.notes}
+        />
+        <Button
+          type="button"
+          variant="outline"
+          className="shrink-0"
+          onClick={() => setChatOpen(true)}
+        >
+          <MessageCircle data-icon="inline-start" />
+          Poser une question
+        </Button>
+      </div>
+
+      <RecipeChatSheet
+        recipeId={recipeId}
+        recipeName={recipe.name}
+        open={chatOpen}
+        onOpenChange={setChatOpen}
       />
 
       <Separator />

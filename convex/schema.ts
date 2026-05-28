@@ -41,4 +41,10 @@ export default defineSchema({
       vectorField: "embedding",
       dimensions: 1536,
     }),
+  recipeChatMessages: defineTable({
+    recipeId: v.id("recipes"),
+    role: v.union(v.literal("user"), v.literal("assistant")),
+    content: v.string(),
+    createdAt: v.number(),
+  }).index("by_recipe", ["recipeId", "createdAt"]),
 });
