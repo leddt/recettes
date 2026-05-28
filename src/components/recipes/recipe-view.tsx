@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "convex/react";
-import { ChefHat, MessageCircle, Trash2 } from "lucide-react";
+import { ChefHat, MessageCircle, RotateCcw, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 
@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/empty";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 
@@ -50,6 +51,7 @@ export function RecipeView({ recipeId }: RecipeViewProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const recipe = useQuery(api.recipes.get, { id: recipeId });
   const removeRecipe = useMutation(api.recipes.remove);
+  const resetCookingProgress = useMutation(api.recipes.resetCookingProgress);
   const { conversations } = useRecipeChatConversations(recipeId);
   const conversationCount = conversations?.length ?? 0;
 
@@ -97,6 +99,9 @@ export function RecipeView({ recipeId }: RecipeViewProps) {
     recipe.photoUrls?.filter(
       (url: string | null): url is string => url !== null,
     ) ?? [];
+  const hasCookingProgress =
+    recipe.ingredients.some((ingredient) => ingredient.checked === true) ||
+    recipe.steps.some((step) => step.checked === true);
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
@@ -158,11 +163,33 @@ export function RecipeView({ recipeId }: RecipeViewProps) {
         onOpenChange={setChatOpen}
       />
 
-      <Separator />
+      <div className="relative">
+        <Separator />
+        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className={cn(
+              "pointer-events-auto transition-opacity",
+              hasCookingProgress ? "opacity-100" : "pointer-events-none opacity-0",
+            )}
+            aria-hidden={!hasCookingProgress}
+            tabIndex={hasCookingProgress ? 0 : -1}
+            onClick={() => void resetCookingProgress({ id: recipeId })}
+          >
+            <RotateCcw data-icon="inline-start" />
+            Réinitialiser
+          </Button>
+        </div>
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <RecipeIngredientsList ingredients={recipe.ingredients} />
-        <RecipeStepsList steps={recipe.steps} />
+        <RecipeIngredientsList
+          recipeId={recipeId}
+          ingredients={recipe.ingredients}
+        />
+        <RecipeStepsList recipeId={recipeId} steps={recipe.steps} />
       </div>
     </div>
   );

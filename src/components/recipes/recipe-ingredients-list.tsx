@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMutation } from "convex/react";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { FieldDescription, FieldLegend, FieldSet } from "@/components/ui/field";
@@ -11,8 +11,11 @@ import {
 } from "@/components/ui/item";
 import { cn } from "@/lib/utils";
 import type { RecipeDraft, RecipeIngredient } from "@/lib/recipe-types";
+import { api } from "../../../convex/_generated/api";
+import type { Id } from "../../../convex/_generated/dataModel";
 
 type RecipeIngredientsListProps = {
+  recipeId: Id<"recipes">;
   ingredients: RecipeDraft["ingredients"];
 };
 
@@ -34,23 +37,10 @@ function IngredientLine({ ingredient }: { ingredient: RecipeIngredient }) {
 }
 
 export function RecipeIngredientsList({
+  recipeId,
   ingredients,
 }: RecipeIngredientsListProps) {
-  const [checkedIndices, setCheckedIndices] = useState<Set<number>>(
-    () => new Set(),
-  );
-
-  function setChecked(index: number, isChecked: boolean) {
-    setCheckedIndices((previous) => {
-      const next = new Set(previous);
-      if (isChecked) {
-        next.add(index);
-      } else {
-        next.delete(index);
-      }
-      return next;
-    });
-  }
+  const setIngredientChecked = useMutation(api.recipes.setIngredientChecked);
 
   return (
     <FieldSet>
@@ -60,7 +50,7 @@ export function RecipeIngredientsList({
       </FieldDescription>
       <ItemGroup>
         {ingredients.map((ingredient, index) => {
-          const isChecked = checkedIndices.has(index);
+          const isChecked = ingredient.checked === true;
 
           return (
             <Item
@@ -72,7 +62,13 @@ export function RecipeIngredientsList({
               <ItemMedia variant="icon">
                 <Checkbox
                   checked={isChecked}
-                  onCheckedChange={(checked) => setChecked(index, checked)}
+                  onCheckedChange={(checked) => {
+                    void setIngredientChecked({
+                      id: recipeId,
+                      index,
+                      checked,
+                    });
+                  }}
                 />
               </ItemMedia>
               <ItemContent

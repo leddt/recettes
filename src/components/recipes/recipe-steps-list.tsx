@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMutation } from "convex/react";
 
 import { StepNumber } from "@/components/recipes/step-number";
 import { FieldDescription, FieldLegend, FieldSet } from "@/components/ui/field";
@@ -10,27 +10,16 @@ import {
 } from "@/components/ui/item";
 import { cn } from "@/lib/utils";
 import type { RecipeDraft } from "@/lib/recipe-types";
+import { api } from "../../../convex/_generated/api";
+import type { Id } from "../../../convex/_generated/dataModel";
 
 type RecipeStepsListProps = {
+  recipeId: Id<"recipes">;
   steps: RecipeDraft["steps"];
 };
 
-export function RecipeStepsList({ steps }: RecipeStepsListProps) {
-  const [completedIndices, setCompletedIndices] = useState<Set<number>>(
-    () => new Set(),
-  );
-
-  function toggleCompleted(index: number) {
-    setCompletedIndices((previous) => {
-      const next = new Set(previous);
-      if (next.has(index)) {
-        next.delete(index);
-      } else {
-        next.add(index);
-      }
-      return next;
-    });
-  }
+export function RecipeStepsList({ recipeId, steps }: RecipeStepsListProps) {
+  const setStepCompleted = useMutation(api.recipes.setStepCompleted);
 
   return (
     <FieldSet>
@@ -40,7 +29,7 @@ export function RecipeStepsList({ steps }: RecipeStepsListProps) {
       </FieldDescription>
       <ItemGroup>
         {steps.map((step, index) => {
-          const isCompleted = completedIndices.has(index);
+          const isCompleted = step.checked === true;
 
           return (
             <Item
@@ -48,7 +37,13 @@ export function RecipeStepsList({ steps }: RecipeStepsListProps) {
               size="xs"
               variant={isCompleted ? "muted" : "default"}
               render={<label />}
-              onClick={() => toggleCompleted(index)}
+              onClick={() => {
+                void setStepCompleted({
+                  id: recipeId,
+                  index,
+                  completed: !isCompleted,
+                });
+              }}
             >
               <ItemMedia>
                 <StepNumber completed={isCompleted} index={index} />

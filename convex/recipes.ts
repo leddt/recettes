@@ -8,9 +8,16 @@ import {
   recipeDraftValidator,
   recipeListItemValidator,
 } from "./lib/recipeValidators";
+import {
+  clearCookingProgress,
+  clearStepCookingProgress,
+  hasCookingProgress,
+  setIngredientCheckedAtIndex,
+  setStepCheckedAtIndex,
+} from "./lib/recipeCookingProgress";
 import { buildRecipeSearchText } from "./lib/recipeSearchText";
 import { mutation, query } from "./_generated/server";
-import type { MutationCtx } from "./_generated/server";
+import type { MutationCtx, QueryCtx } from "./_generated/server";
 
 function validateRecipeDraft(args: {
   name: string;
@@ -41,6 +48,23 @@ function validateRecipeDraft(args: {
   return { name, ingredients, steps };
 }
 
+async function requireAuthenticatedUser(ctx: QueryCtx | MutationCtx) {
+  const userId = await getAuthUserId(ctx);
+  if (userId === null) {
+    throw new Error("Non authentifié.");
+  }
+  return userId;
+}
+
+async function getRecipeForUser(ctx: QueryCtx | MutationCtx, recipeId: Id<"recipes">) {
+  await requireAuthenticatedUser(ctx);
+  const recipe = await ctx.db.get("recipes", recipeId);
+  if (recipe === null) {
+    throw new Error("Recette introuvable.");
+  }
+  return recipe;
+}
+
 async function deleteRecipeChatData(ctx: MutationCtx, recipeId: Id<"recipes">) {
   const conversations = await ctx.db
     .query("recipeChatConversations")
@@ -67,10 +91,7 @@ export const get = query({
   args: { id: v.id("recipes") },
   returns: v.union(recipeDetailValidator, v.null()),
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (userId === null) {
-      throw new Error("Non authentifié.");
-    }
+    await requireAuthenticatedUser(ctx);
 
     const recipe = await ctx.db.get("recipes", args.id);
     if (recipe === null) {
@@ -183,6 +204,84 @@ export const create = mutation({
     });
 
     return recipeId;
+  },
+});
+
+export const setIngredientChecked = mutation({
+  args: {
+    id: v.id("recipes"),
+    index: v.number(),
+    checked: v.boolean(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const recipe = await getRecipeForUser(ctx, args.id);
+
+    if (
+      !Number.isInteger(args.index) ||
+      args.index < 0 ||
+      args.index >= recipe.ingredients.length
+    ) {
+      throw new Error("Ingrédient introuvable.");
+    }
+
+    await ctx.db.patch("recipes", args.id, {
+      ingredients: setIngredientCheckedAtIndex(
+        recipe.ingredients,
+        args.index,
+        args.checked,
+      ),
+      updatedAt: Date.now(),
+    });
+
+    return null;
+  },
+});
+
+export const setStepCompleted = mutation({
+  args: {
+    id: v.id("recipes"),
+    index: v.number(),
+    completed: v.boolean(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const recipe = await getRecipeForUser(ctx, args.id);
+
+    if (
+      !Number.isInteger(args.index) ||
+      args.index < 0 ||
+      args.index >= recipe.steps.length
+    ) {
+      throw new Error("Étape introuvable.");
+    }
+
+    await ctx.db.patch("recipes", args.id, {
+      steps: setStepCheckedAtIndex(recipe.steps, args.index, args.completed),
+      updatedAt: Date.now(),
+    });
+
+    return null;
+  },
+});
+
+export const resetCookingProgress = mutation({
+  args: { id: v.id("recipes") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const recipe = await getRecipeForUser(ctx, args.id);
+
+    if (!hasCookingProgress(recipe.ingredients, recipe.steps)) {
+      return null;
+    }
+
+    await ctx.db.patch("recipes", args.id, {
+      ingredients: clearCookingProgress(recipe.ingredients),
+      steps: clearStepCookingProgress(recipe.steps),
+      updatedAt: Date.now(),
+    });
+
+    return null;
   },
 });
 

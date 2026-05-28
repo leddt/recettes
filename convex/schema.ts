@@ -11,11 +11,13 @@ export default defineSchema({
         name: v.string(),
         quantity: v.optional(v.string()),
         unit: v.optional(v.string()),
+        checked: v.optional(v.boolean()),
       }),
     ),
     steps: v.array(
       v.object({
         text: v.string(),
+        checked: v.optional(v.boolean()),
       }),
     ),
     servings: v.optional(v.number()),

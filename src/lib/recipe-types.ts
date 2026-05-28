@@ -2,10 +2,12 @@ export type RecipeIngredient = {
   name: string;
   quantity?: string;
   unit?: string;
+  checked?: boolean;
 };
 
 export type RecipeStep = {
   text: string;
+  checked?: boolean;
 };
 
 export type RecipeDraft = {

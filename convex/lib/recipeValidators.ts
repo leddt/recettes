@@ -4,10 +4,12 @@ export const ingredientValidator = v.object({
   name: v.string(),
   quantity: v.optional(v.string()),
   unit: v.optional(v.string()),
+  checked: v.optional(v.boolean()),
 });
 
 export const stepValidator = v.object({
   text: v.string(),
+  checked: v.optional(v.boolean()),
 });
 
 export const recipeDraftValidator = v.object({
