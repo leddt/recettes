@@ -4,6 +4,7 @@ import { v } from "convex/values";
 import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
+import { ingredientValidator, stepValidator } from "./lib/recipeValidators";
 
 const MAX_STORED_MESSAGES = 100;
 const MAX_CONVERSATIONS = 50;
@@ -34,18 +35,8 @@ const recipeForChatValidator = v.union(
     totalTime: v.optional(v.number()),
     tags: v.array(v.string()),
     notes: v.optional(v.string()),
-    ingredients: v.array(
-      v.object({
-        name: v.string(),
-        quantity: v.optional(v.string()),
-        unit: v.optional(v.string()),
-      }),
-    ),
-    steps: v.array(
-      v.object({
-        text: v.string(),
-      }),
-    ),
+    ingredients: v.array(ingredientValidator),
+    steps: v.array(stepValidator),
   }),
   v.null(),
 );
