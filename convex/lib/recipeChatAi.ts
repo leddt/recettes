@@ -8,7 +8,7 @@ function getEnv(name: string): string | undefined {
 }
 
 function getChatModel(): string {
-  return getEnv("OPENAI_CHAT_MODEL") ?? "gpt-4o-mini";
+  return getEnv("OPENAI_CHAT_MODEL") ?? "gpt-5.4-mini";
 }
 
 const SYSTEM_PROMPT =

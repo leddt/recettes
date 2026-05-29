@@ -23,9 +23,14 @@ export function getOpenAiClient(): OpenAI {
   return new OpenAI({ apiKey });
 }
 
-/** Modèle vision : meilleure fidélité OCR / consignes que gpt-4o. Surcharge via OPENAI_VISION_MODEL. */
+/** Import depuis URL (extraction texte). Surcharge via OPENAI_IMPORT_MODEL. */
+function getImportModel(): string {
+  return getEnv("OPENAI_IMPORT_MODEL") ?? "gpt-5.4-mini";
+}
+
+/** Import depuis photos (vision). Surcharge via OPENAI_VISION_MODEL. */
 function getVisionModel(): string {
-  return getEnv("OPENAI_VISION_MODEL") ?? "gpt-4.1";
+  return getEnv("OPENAI_VISION_MODEL") ?? "gpt-5.4-mini";
 }
 
 const PHOTO_RECIPE_SYSTEM_PROMPT =
@@ -197,7 +202,7 @@ export async function extractRecipeWithAiFromText(
   const openai = getOpenAiClient();
 
   const completion = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: getImportModel(),
     temperature: 0,
     messages: [
       {
