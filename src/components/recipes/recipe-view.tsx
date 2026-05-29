@@ -3,7 +3,6 @@ import {
   ChevronDown,
   ChefHat,
   MessageCircle,
-  RotateCcw,
   Trash2,
 } from "lucide-react";
 import { useState } from "react";
@@ -23,8 +22,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { RecipeIngredientsList } from "@/components/recipes/recipe-ingredients-list";
-import { RecipeStepsList } from "@/components/recipes/recipe-steps-list";
+import { RecipeCookingSection } from "@/components/recipes/recipe-cooking-section";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Empty,
   EmptyDescription,
@@ -32,9 +31,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 
@@ -45,13 +42,35 @@ type RecipeViewProps = {
 function RecipeViewSkeleton() {
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
-      <Skeleton className="h-8 w-2/3" />
-      <Skeleton className="h-4 w-1/3" />
-      <Skeleton className="h-24 w-full" />
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Skeleton className="h-48 w-full" />
-        <Skeleton className="h-48 w-full" />
-      </div>
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-8 w-2/3" />
+          <Skeleton className="h-4 w-1/3" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-48 w-full rounded-lg" />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-5 w-24" />
+          <Skeleton className="h-4 w-64" />
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="flex flex-col gap-4">
+              <Skeleton className="h-5 w-32" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <div className="flex flex-col gap-4">
+              <Skeleton className="h-5 w-32" />
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -139,17 +158,21 @@ export function RecipeView({ recipeId }: RecipeViewProps) {
   if (recipe === null) {
     return (
       <div className="mx-auto w-full max-w-4xl">
-        <Empty className="border">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <ChefHat />
-            </EmptyMedia>
-            <EmptyTitle>Recette introuvable</EmptyTitle>
-            <EmptyDescription>
-              Cette recette n&apos;existe plus ou n&apos;est pas accessible.
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
+        <Card>
+          <CardContent>
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <ChefHat />
+                </EmptyMedia>
+                <EmptyTitle>Recette introuvable</EmptyTitle>
+                <EmptyDescription>
+                  Cette recette n&apos;existe plus ou n&apos;est pas accessible.
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -205,34 +228,13 @@ export function RecipeView({ recipeId }: RecipeViewProps) {
         onOpenChange={setChatOpen}
       />
 
-      <div className="relative">
-        <Separator />
-        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className={cn(
-              "pointer-events-auto transition-opacity",
-              hasCookingProgress ? "opacity-100" : "pointer-events-none opacity-0",
-            )}
-            aria-hidden={!hasCookingProgress}
-            tabIndex={hasCookingProgress ? 0 : -1}
-            onClick={() => void resetCookingProgress({ id: recipeId })}
-          >
-            <RotateCcw data-icon="inline-start" />
-            Réinitialiser
-          </Button>
-        </div>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <RecipeIngredientsList
-          recipeId={recipeId}
-          ingredients={recipe.ingredients}
-        />
-        <RecipeStepsList recipeId={recipeId} steps={recipe.steps} />
-      </div>
+      <RecipeCookingSection
+        recipeId={recipeId}
+        ingredients={recipe.ingredients}
+        steps={recipe.steps}
+        hasCookingProgress={hasCookingProgress}
+        onResetProgress={() => void resetCookingProgress({ id: recipeId })}
+      />
     </div>
   );
 }
