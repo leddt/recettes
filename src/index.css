@@ -2,11 +2,14 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
+@import "@fontsource/caveat/400.css";
+@import "@fontsource/caveat/600.css";
+@import "@fontsource/caveat/700.css";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-    --font-heading: var(--font-sans);
+    --font-heading: "Caveat", cursive;
     --font-sans: Geist, ui-sans-serif, system-ui, sans-serif;
     --font-serif: 'Instrument Serif', ui-serif, Georgia, serif;
     --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
@@ -76,6 +79,7 @@
 
 :root {
     --font-sans: Geist, ui-sans-serif, system-ui, sans-serif;
+    --font-heading: "Caveat", cursive;
     --font-serif: 'Instrument Serif', ui-serif, Georgia, serif;
     --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
     --background: oklch(0.9728 0.0054 95.0993);
@@ -165,6 +169,7 @@
     --destructive-foreground: oklch(0.1562 0.0257 25.5104);
     --radius: 0.625rem;
     --font-sans: Geist, ui-sans-serif, system-ui, sans-serif;
+    --font-heading: "Caveat", cursive;
     --font-serif: 'Instrument Serif', ui-serif, Georgia, serif;
     --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
     --shadow-color: #000000;

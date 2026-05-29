@@ -53,7 +53,7 @@ function IngredientsHeader({
 }) {
   return (
     <div className="flex items-center justify-between gap-2">
-      <h3 className="font-heading text-base leading-snug font-medium">
+      <h3 className="font-heading text-xl leading-snug font-medium">
         Ingrédients
       </h3>
       <span className="text-sm text-muted-foreground tabular-nums">

@@ -29,7 +29,7 @@ type RecipeStepsListProps = {
 function StepsHeader({ checked, total }: { checked: number; total: number }) {
   return (
     <div className="flex items-center justify-between gap-2">
-      <h3 className="font-heading text-base leading-snug font-medium">Étapes</h3>
+      <h3 className="font-heading text-xl leading-snug font-medium">Étapes</h3>
       <span className="text-sm text-muted-foreground tabular-nums">
         {formatSectionCount(checked, total)}
       </span>

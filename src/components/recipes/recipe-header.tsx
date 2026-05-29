@@ -53,7 +53,7 @@ export function RecipeHeader({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-2xl font-semibold tracking-tight">
+        <CardTitle className="text-4xl font-semibold">
           {name}
         </CardTitle>
         {actions ? <CardAction>{actions}</CardAction> : null}

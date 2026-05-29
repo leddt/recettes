@@ -16,7 +16,10 @@ export function AppLayout() {
     <div className="flex min-h-svh flex-col">
       <header className="flex items-center justify-between border-b px-6 py-4">
         <div className="flex flex-col gap-1">
-          <Link to="/" className="text-2xl font-semibold tracking-tight">
+          <Link
+            to="/"
+            className="font-heading text-4xl font-semibold tracking-normal"
+          >
             Recettes
           </Link>
           {viewer?.name || viewer?.email ? (
