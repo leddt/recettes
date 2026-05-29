@@ -1,4 +1,4 @@
-import { ImageIcon, LinkIcon } from "lucide-react";
+import { CameraIcon, ImageIcon, LinkIcon } from "lucide-react";
 import { useNavigate } from "react-router";
 
 import { RecipePhotoGrid } from "@/components/recipes/recipe-photo-grid";
@@ -23,18 +23,24 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { MAX_RECIPE_PHOTOS } from "../../../../convex/lib/recipeImageLimits";
 import type { ImportMode } from "./use-recipe-import";
 
+const hiddenFileInputClassName =
+  "pointer-events-none fixed top-0 left-0 h-px w-px opacity-0";
+
 type ImportInputStepProps = {
   importMode: ImportMode;
   url: string;
   error: string | null;
   isAnalyzing: boolean;
   previewUrls: string[];
-  fileInputRef: React.RefObject<HTMLInputElement | null>;
+  cameraInputRef: React.RefObject<HTMLInputElement | null>;
+  galleryInputRef: React.RefObject<HTMLInputElement | null>;
   selectedFilesCount: number;
   onModeChange: (mode: ImportMode) => void;
   onUrlChange: (url: string) => void;
   onClearError: () => void;
-  onFilesSelected: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onCameraPhotoSelected: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onGalleryPhotosSelected: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onRemovePhoto: (index: number) => void;
   onAnalyzeUrl: (event: React.FormEvent<HTMLFormElement>) => void;
   onAnalyzePhotos: (event: React.FormEvent<HTMLFormElement>) => void;
 };
@@ -45,16 +51,21 @@ export function ImportInputStep({
   error,
   isAnalyzing,
   previewUrls,
-  fileInputRef,
+  cameraInputRef,
+  galleryInputRef,
   selectedFilesCount,
   onModeChange,
   onUrlChange,
   onClearError,
-  onFilesSelected,
+  onCameraPhotoSelected,
+  onGalleryPhotosSelected,
+  onRemovePhoto,
   onAnalyzeUrl,
   onAnalyzePhotos,
 }: ImportInputStepProps) {
   const navigate = useNavigate();
+  const photosLimitReached = selectedFilesCount >= MAX_RECIPE_PHOTOS;
+  const photoPickerDisabled = isAnalyzing || photosLimitReached;
 
   return (
     <Card className="mx-auto w-full max-w-2xl">
@@ -129,25 +140,66 @@ export function ImportInputStep({
           <form onSubmit={onAnalyzePhotos} className="flex flex-col gap-6">
             <FieldGroup>
               <Field data-invalid={error !== null}>
-                <FieldLabel htmlFor="recipe-photos">Photos de la recette</FieldLabel>
-                <Input
-                  ref={fileInputRef}
-                  id="recipe-photos"
+                <FieldLabel>Photos de la recette</FieldLabel>
+                <input
+                  ref={cameraInputRef}
+                  id="recipe-photos-camera"
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  tabIndex={-1}
+                  className={hiddenFileInputClassName}
+                  onChange={onCameraPhotoSelected}
+                />
+                <input
+                  ref={galleryInputRef}
+                  id="recipe-photos-gallery"
                   type="file"
                   accept="image/*"
                   multiple
-                  onChange={onFilesSelected}
+                  tabIndex={-1}
+                  className={hiddenFileInputClassName}
+                  onChange={onGalleryPhotosSelected}
                 />
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Button
+                    nativeButton={false}
+                    variant="outline"
+                    className="flex-1 py-1"
+                    disabled={photoPickerDisabled}
+                    render={<label htmlFor="recipe-photos-camera" />}
+                  >
+                    <CameraIcon data-icon="inline-start" />
+                    {selectedFilesCount > 0
+                      ? "Ajouter une photo"
+                      : "Prendre une photo"}
+                  </Button>
+                  <Button
+                    nativeButton={false}
+                    variant="outline"
+                    className="flex-1 py-1"
+                    disabled={photoPickerDisabled}
+                    render={<label htmlFor="recipe-photos-gallery" />}
+                  >
+                    <ImageIcon data-icon="inline-start" />
+                    Galerie
+                  </Button>
+                </div>
                 <FieldDescription>
                   Jusqu&apos;à {MAX_RECIPE_PHOTOS} images (5 Mo chacune).
-                  Plusieurs pages d&apos;un même livre sont fusionnées en une
-                  recette.
+                  Sur iPhone, la caméra et la galerie sont deux actions
+                  distinctes : prenez plusieurs pages une par une, ou
+                  sélectionnez-les en une fois depuis la galerie.
                 </FieldDescription>
                 {error !== null ? <FieldError>{error}</FieldError> : null}
               </Field>
             </FieldGroup>
 
-            <RecipePhotoGrid urls={previewUrls} altPrefix="Aperçu" />
+            <RecipePhotoGrid
+              urls={previewUrls}
+              altPrefix="Aperçu"
+              onRemovePhoto={isAnalyzing ? undefined : onRemovePhoto}
+            />
 
             <div className="flex justify-between gap-3">
               <Button

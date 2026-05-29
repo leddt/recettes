@@ -12,10 +12,31 @@ import { cn } from "@/lib/utils";
 type RecipePhotoGridProps = {
   urls: string[];
   altPrefix: string;
+  onRemovePhoto?: (index: number) => void;
 };
 
-export function RecipePhotoGrid({ urls, altPrefix }: RecipePhotoGridProps) {
+export function RecipePhotoGrid({
+  urls,
+  altPrefix,
+  onRemovePhoto,
+}: RecipePhotoGridProps) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  function handleRemovePhoto(index: number) {
+    onRemovePhoto?.(index);
+    setLightboxIndex((current) => {
+      if (current === null) {
+        return null;
+      }
+      if (current === index) {
+        return null;
+      }
+      if (current > index) {
+        return current - 1;
+      }
+      return current;
+    });
+  }
 
   if (urls.length === 0) {
     return null;
@@ -29,7 +50,22 @@ export function RecipePhotoGrid({ urls, altPrefix }: RecipePhotoGridProps) {
     <>
       <ul className="grid grid-cols-5 gap-3">
         {urls.map((url, index) => (
-          <li key={`${url}-${index}`} className="overflow-hidden rounded-lg border">
+          <li key={index} className="relative overflow-hidden rounded-lg border">
+            {onRemovePhoto ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-xs"
+                className="absolute top-1 right-1 z-10 bg-black/60 text-white hover:bg-black/80 hover:text-white"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  handleRemovePhoto(index);
+                }}
+                aria-label={`Retirer ${altPrefix} — photo ${index + 1}`}
+              >
+                <X />
+              </Button>
+            ) : null}
             <button
               type="button"
               onClick={() => setLightboxIndex(index)}

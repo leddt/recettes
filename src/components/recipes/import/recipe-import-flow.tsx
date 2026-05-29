@@ -13,12 +13,15 @@ export function RecipeImportFlow() {
         error={importState.error}
         isAnalyzing={importState.isAnalyzing}
         previewUrls={importState.previewUrls}
-        fileInputRef={importState.fileInputRef}
+        cameraInputRef={importState.cameraInputRef}
+        galleryInputRef={importState.galleryInputRef}
         selectedFilesCount={importState.selectedFiles.length}
         onModeChange={importState.handleModeChange}
         onUrlChange={importState.setUrl}
         onClearError={() => importState.setError(null)}
-        onFilesSelected={importState.handleFilesSelected}
+        onCameraPhotoSelected={importState.handleCameraPhotoSelected}
+        onGalleryPhotosSelected={importState.handleGalleryPhotosSelected}
+        onRemovePhoto={importState.handleRemovePhoto}
         onAnalyzeUrl={importState.handleAnalyzeUrl}
         onAnalyzePhotos={importState.handleAnalyzePhotos}
       />

@@ -10,6 +10,7 @@ import {
   type RecipeDraft,
 } from "@/lib/recipe-types";
 import { uploadRecipePhotos } from "@/lib/upload-recipe-photos";
+import { isRecipePhotoFile } from "@/lib/is-recipe-photo-file";
 import { api } from "../../../../convex/_generated/api";
 import type { Id } from "../../../../convex/_generated/dataModel";
 import { MAX_RECIPE_PHOTOS } from "../../../../convex/lib/recipeImageLimits";
@@ -64,7 +65,8 @@ export function useRecipeImport() {
   const [isReanalyzing, setIsReanalyzing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [selectedCoverIndex, setSelectedCoverIndex] = useState(0);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const previewUrls = useMemo(
     () => selectedFiles.map((file) => URL.createObjectURL(file)),
@@ -86,8 +88,11 @@ export function useRecipeImport() {
     setUploadedPhotoIds([]);
     setSelectedCoverIndex(0);
     setSelectedFiles([]);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+    if (cameraInputRef.current) {
+      cameraInputRef.current.value = "";
+    }
+    if (galleryInputRef.current) {
+      galleryInputRef.current.value = "";
     }
   }
 
@@ -98,28 +103,60 @@ export function useRecipeImport() {
     setSelectedFiles([]);
     setUploadedPhotoIds([]);
     setSelectedCoverIndex(0);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+    if (cameraInputRef.current) {
+      cameraInputRef.current.value = "";
+    }
+    if (galleryInputRef.current) {
+      galleryInputRef.current.value = "";
     }
   }
 
-  function handleFilesSelected(event: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(event.target.files ?? []);
+  function applySelectedFiles(files: File[]) {
     setError(null);
 
-    if (files.length > MAX_RECIPE_PHOTOS) {
-      setError(`Maximum ${MAX_RECIPE_PHOTOS} photos par import.`);
-      setSelectedFiles(files.slice(0, MAX_RECIPE_PHOTOS));
+    if (files.length === 0) {
       return;
     }
 
-    const invalidFile = files.find((file) => !file.type.startsWith("image/"));
-    if (invalidFile) {
-      setError("Seules les images sont acceptées.");
-      return;
-    }
+    setSelectedFiles((currentFiles) => {
+      const nextFiles = [...currentFiles, ...files];
 
-    setSelectedFiles(files);
+      if (nextFiles.length > MAX_RECIPE_PHOTOS) {
+        setError(`Maximum ${MAX_RECIPE_PHOTOS} photos par import.`);
+        return nextFiles.slice(-MAX_RECIPE_PHOTOS);
+      }
+
+      const invalidFile = nextFiles.find((file) => !isRecipePhotoFile(file));
+      if (invalidFile) {
+        setError("Seules les images sont acceptées.");
+        return currentFiles;
+      }
+
+      return nextFiles;
+    });
+  }
+
+  function handleCameraPhotoSelected(
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) {
+    const files = Array.from(event.target.files ?? []);
+    event.target.value = "";
+    applySelectedFiles(files);
+  }
+
+  function handleGalleryPhotosSelected(
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) {
+    const files = Array.from(event.target.files ?? []);
+    event.target.value = "";
+    applySelectedFiles(files);
+  }
+
+  function handleRemovePhoto(index: number) {
+    setError(null);
+    setSelectedFiles((currentFiles) =>
+      currentFiles.filter((_, fileIndex) => fileIndex !== index),
+    );
   }
 
   async function handleAnalyzeUrl(event: React.FormEvent<HTMLFormElement>) {
@@ -268,10 +305,13 @@ export function useRecipeImport() {
     isAnalyzing,
     isReanalyzing,
     isSaving,
-    fileInputRef,
+    cameraInputRef,
+    galleryInputRef,
     resetToInput,
     handleModeChange,
-    handleFilesSelected,
+    handleCameraPhotoSelected,
+    handleGalleryPhotosSelected,
+    handleRemovePhoto,
     handleAnalyzeUrl,
     handleAnalyzePhotos,
     handleReanalyzeWithAi,

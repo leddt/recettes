@@ -1,6 +1,7 @@
 import type { Id } from "../../convex/_generated/dataModel";
 
 import { MAX_RECIPE_PHOTOS } from "../../convex/lib/recipeImageLimits";
+import { isRecipePhotoFile } from "./is-recipe-photo-file";
 
 type GenerateUploadUrl = () => Promise<string>;
 
@@ -19,7 +20,7 @@ export async function uploadRecipePhotos(
   const storageIds: Id<"_storage">[] = [];
 
   for (const file of files) {
-    if (!file.type.startsWith("image/")) {
+    if (!isRecipePhotoFile(file)) {
       throw new Error("Seules les images sont acceptées.");
     }
 
