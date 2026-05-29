@@ -58,7 +58,7 @@ export function ImportReviewStep({
             <RecipeCoverImage
               url={coverPreviewUrl}
               alt={draft.name || "Recette"}
-              variant="hero"
+              className="w-full max-h-72 rounded-lg"
             />
           </div>
         ) : null}
