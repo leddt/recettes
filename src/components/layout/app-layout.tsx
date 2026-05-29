@@ -1,9 +1,16 @@
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useQuery } from "convex/react";
+import { LogOutIcon } from "lucide-react";
 import { Link, Outlet, useLocation } from "react-router";
 
+import { HeaderSettingsMenu } from "@/components/layout/header-settings-menu";
 import { ThemeDropdown } from "@/components/layout/theme-dropdown";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { api } from "../../../convex/_generated/api";
 
 export function AppLayout() {
@@ -30,20 +37,37 @@ export function AppLayout() {
         </div>
         <div className="flex items-center gap-2">
           {isHome ? (
-            <Button render={<Link to="/import" />}>Importer une recette</Button>
+            <Button nativeButton={false} render={<Link to="/import" />}>
+              Importer une recette
+            </Button>
           ) : (
-            <Button variant="outline" render={<Link to="/" />}>
+            <Button nativeButton={false} variant="outline" render={<Link to="/" />}>
               Accueil
             </Button>
           )}
-          <Button variant="outline" onClick={() => void signOut()}>
-            Se déconnecter
-          </Button>
-          <ThemeDropdown />
+          <div className="hidden items-center gap-2 sm:flex">
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    aria-label="Se déconnecter"
+                    onClick={() => void signOut()}
+                  />
+                }
+              >
+                <LogOutIcon />
+              </TooltipTrigger>
+              <TooltipContent>Se déconnecter</TooltipContent>
+            </Tooltip>
+            <ThemeDropdown />
+          </div>
+          <HeaderSettingsMenu />
         </div>
       </header>
 
-      <main className="flex flex-1 flex-col gap-6 p-6">
+      <main className="flex flex-1 flex-col gap-6 py-6 px-0 sm:px-6">
         <Outlet />
       </main>
     </div>

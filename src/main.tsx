@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router";
 
 import { ThemeProvider } from "@/components/theme-provider.tsx";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { convex } from "@/lib/convex";
 
 import "./index.css";
@@ -14,7 +15,9 @@ createRoot(document.getElementById("root")!).render(
     <BrowserRouter>
       <ConvexAuthProvider client={convex}>
         <ThemeProvider>
-          <App />
+          <TooltipProvider>
+            <App />
+          </TooltipProvider>
         </ThemeProvider>
       </ConvexAuthProvider>
     </BrowserRouter>

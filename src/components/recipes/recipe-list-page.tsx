@@ -72,7 +72,9 @@ function RecipeListEmpty({ isSearchActive }: { isSearchActive: boolean }) {
       </EmptyHeader>
       {!isSearchActive ? (
         <EmptyContent>
-          <Button render={<Link to="/import" />}>Importer une recette</Button>
+          <Button nativeButton={false} render={<Link to="/import" />}>
+            Importer une recette
+          </Button>
         </EmptyContent>
       ) : null}
     </Empty>

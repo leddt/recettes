@@ -108,7 +108,7 @@ export function ImportReviewStep({
         {error !== null ? <RecipeErrorAlert message={error} /> : null}
 
         <div className="fixed inset-x-0 bottom-0 z-10 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
-          <div className="mx-auto flex w-full max-w-4xl items-center justify-between gap-3 p-6">
+          <div className="mx-auto flex w-full max-w-4xl items-center justify-between gap-3 px-4 py-4 sm:px-6 sm:py-6">
             <Button type="button" variant="outline" onClick={onReset}>
               Retour
             </Button>

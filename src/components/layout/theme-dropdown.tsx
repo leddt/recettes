@@ -18,9 +18,24 @@ const THEME_OPTIONS: Array<{ value: ThemeOption; label: string }> = [
   { value: "system", label: "Système" },
 ];
 
-export function ThemeDropdown() {
+export function ThemeMenuRadioGroup() {
   const { theme, setTheme } = useTheme();
 
+  return (
+    <DropdownMenuRadioGroup
+      value={theme}
+      onValueChange={(value) => setTheme(value as ThemeOption)}
+    >
+      {THEME_OPTIONS.map((option) => (
+        <DropdownMenuRadioItem key={option.value} value={option.value}>
+          {option.label}
+        </DropdownMenuRadioItem>
+      ))}
+    </DropdownMenuRadioGroup>
+  );
+}
+
+export function ThemeDropdown() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -35,16 +50,7 @@ export function ThemeDropdown() {
         <SunMoonIcon />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-40">
-        <DropdownMenuRadioGroup
-          value={theme}
-          onValueChange={(value) => setTheme(value as ThemeOption)}
-        >
-          {THEME_OPTIONS.map((option) => (
-            <DropdownMenuRadioItem key={option.value} value={option.value}>
-              {option.label}
-            </DropdownMenuRadioItem>
-          ))}
-        </DropdownMenuRadioGroup>
+        <ThemeMenuRadioGroup />
       </DropdownMenuContent>
     </DropdownMenu>
   );

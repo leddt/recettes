@@ -52,11 +52,15 @@ export function RecipeHeader({
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="has-data-[slot=card-action]:grid-cols-1 has-data-[slot=card-action]:gap-3 sm:has-data-[slot=card-action]:grid-cols-[1fr_auto] sm:has-data-[slot=card-action]:gap-1">
         <CardTitle className="text-4xl font-semibold">
           {name}
         </CardTitle>
-        {actions ? <CardAction>{actions}</CardAction> : null}
+        {actions ? (
+          <CardAction className="col-start-1 row-span-1 row-start-2 justify-self-start sm:col-start-2 sm:row-span-2 sm:row-start-1 sm:justify-self-end">
+            {actions}
+          </CardAction>
+        ) : null}
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <div className="grid gap-2 sm:grid-cols-[2fr_1fr]">
