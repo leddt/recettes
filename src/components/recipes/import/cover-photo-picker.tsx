@@ -18,12 +18,7 @@ export function CoverPhotoPicker({
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <p className="text-sm font-medium">Image principale</p>
-      <p className="text-sm text-muted-foreground">
-        Choisissez la photo affichée dans la liste et en haut de la fiche.
-      </p>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
         {urls.map((url, index) => (
           <button
             key={url}
@@ -45,7 +40,6 @@ export function CoverPhotoPicker({
             />
           </button>
         ))}
-      </div>
     </div>
   );
 }

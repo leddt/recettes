@@ -1,13 +1,7 @@
-import { Minus, Plus } from "lucide-react";
+import { Minus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Field,
-  FieldDescription,
-  FieldLabel,
-  FieldLegend,
-  FieldSet,
-} from "@/components/ui/field";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Item, ItemActions, ItemContent, ItemGroup, ItemMedia } from "@/components/ui/item";
 import { Textarea } from "@/components/ui/textarea";
 import type { RecipeDraft } from "@/lib/recipe-types";
@@ -29,31 +23,7 @@ export function RecipeStepsEditor({ value, onChange }: RecipeStepsEditorProps) {
   }
 
   return (
-    <FieldSet>
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <FieldLegend className="mb-0">Étapes</FieldLegend>
-          <FieldDescription className="mb-0">
-            Décrivez la préparation étape par étape.
-          </FieldDescription>
-        </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() =>
-            onChange({
-              ...value,
-              steps: [...value.steps, { text: "" }],
-            })
-          }
-        >
-          <Plus data-icon="inline-start" />
-          Ajouter
-        </Button>
-      </div>
-
-      <ItemGroup>
+    <ItemGroup>
         {value.steps.map((step, index) => (
           <Item key={`step-${index}`} size="xs">
             <ItemMedia>
@@ -93,7 +63,13 @@ export function RecipeStepsEditor({ value, onChange }: RecipeStepsEditorProps) {
             </ItemActions>
           </Item>
         ))}
-      </ItemGroup>
-    </FieldSet>
+    </ItemGroup>
   );
+}
+
+export function addEmptyStep(value: RecipeDraft): RecipeDraft {
+  return {
+    ...value,
+    steps: [...value.steps, { text: "" }],
+  };
 }

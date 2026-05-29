@@ -1,13 +1,10 @@
-import { Minus, Plus } from "lucide-react";
+import { Minus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
   Field,
-  FieldDescription,
   FieldGroup,
   FieldLabel,
-  FieldLegend,
-  FieldSet,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Item, ItemActions, ItemContent, ItemGroup } from "@/components/ui/item";
@@ -38,34 +35,7 @@ export function RecipeIngredientsEditor({
   }
 
   return (
-    <FieldSet>
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <FieldLegend className="mb-0">Ingrédients</FieldLegend>
-          <FieldDescription className="mb-0">
-            Quantité et unité sont optionnelles.
-          </FieldDescription>
-        </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() =>
-            onChange({
-              ...value,
-              ingredients: [
-                ...value.ingredients,
-                { name: "", quantity: "", unit: "" },
-              ],
-            })
-          }
-        >
-          <Plus data-icon="inline-start" />
-          Ajouter
-        </Button>
-      </div>
-
-      <ItemGroup>
+    <ItemGroup>
         {value.ingredients.map((ingredient, index) => (
           <Item key={`ingredient-${index}`} variant="outline">
             <ItemContent>
@@ -129,7 +99,13 @@ export function RecipeIngredientsEditor({
             </ItemActions>
           </Item>
         ))}
-      </ItemGroup>
-    </FieldSet>
+    </ItemGroup>
   );
+}
+
+export function addEmptyIngredient(value: RecipeDraft): RecipeDraft {
+  return {
+    ...value,
+    ingredients: [...value.ingredients, { name: "", quantity: "", unit: "" }],
+  };
 }
