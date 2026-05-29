@@ -1,6 +1,7 @@
-import { createAccount, retrieveAccount } from "@convex-dev/auth/server";
+import { retrieveAccount } from "@convex-dev/auth/server";
 
 import { DEFAULT_ACCOUNT } from "./lib/defaults";
+import { createPasswordAccount } from "./lib/createPasswordAccount";
 import { internalAction } from "./_generated/server";
 
 export const seedDefaultAccount = internalAction({
@@ -16,15 +17,7 @@ export const seedDefaultAccount = internalAction({
 
       return { email, userId: existing.user._id };
     } catch {
-      const created = await createAccount(ctx, {
-        provider: "password",
-        account: { id: email, secret: password },
-        profile: { email, name },
-        shouldLinkViaEmail: false,
-        shouldLinkViaPhone: false,
-      });
-
-      return { email, userId: created.user._id };
+      return await createPasswordAccount(ctx, { email, password, name });
     }
   },
 });

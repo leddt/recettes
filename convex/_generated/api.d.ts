@@ -8,9 +8,11 @@
  * @module
  */
 
+import type * as admin from "../admin.js";
 import type * as auth from "../auth.js";
 import type * as files from "../files.js";
 import type * as http from "../http.js";
+import type * as lib_createPasswordAccount from "../lib/createPasswordAccount.js";
 import type * as lib_defaults from "../lib/defaults.js";
 import type * as lib_htmlParse from "../lib/htmlParse.js";
 import type * as lib_recipeAi from "../lib/recipeAi.js";
@@ -41,9 +43,11 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  admin: typeof admin;
   auth: typeof auth;
   files: typeof files;
   http: typeof http;
+  "lib/createPasswordAccount": typeof lib_createPasswordAccount;
   "lib/defaults": typeof lib_defaults;
   "lib/htmlParse": typeof lib_htmlParse;
   "lib/recipeAi": typeof lib_recipeAi;
