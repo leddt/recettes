@@ -1,5 +1,11 @@
 import { useMutation, useQuery } from "convex/react";
-import { ChefHat, MessageCircle, RotateCcw, Trash2 } from "lucide-react";
+import {
+  ChevronDown,
+  ChefHat,
+  MessageCircle,
+  RotateCcw,
+  Trash2,
+} from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 
@@ -10,6 +16,13 @@ import { RecipeErrorAlert } from "@/components/recipes/recipe-error-alert";
 import { RecipeHeader } from "@/components/recipes/recipe-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { RecipeIngredientsList } from "@/components/recipes/recipe-ingredients-list";
 import { RecipeStepsList } from "@/components/recipes/recipe-steps-list";
 import {
@@ -40,6 +53,52 @@ function RecipeViewSkeleton() {
         <Skeleton className="h-48 w-full" />
       </div>
     </div>
+  );
+}
+
+type RecipeViewActionsProps = {
+  conversationCount: number;
+  onAskQuestion: () => void;
+  onDelete: () => void;
+};
+
+function RecipeViewActions({
+  conversationCount,
+  onAskQuestion,
+  onDelete,
+}: RecipeViewActionsProps) {
+  return (
+    <ButtonGroup>
+      <Button type="button" variant="outline" onClick={onAskQuestion}>
+        <MessageCircle data-icon="inline-start" />
+        Poser une question
+        {conversationCount > 0 ? (
+          <Badge>
+            {conversationCount}
+          </Badge>
+        ) : null}
+      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              type="button"
+              variant="outline"
+              className="pl-2!"
+              aria-label="Autres actions"
+            />
+          }
+        >
+          <ChevronDown />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem variant="destructive" onClick={onDelete}>
+            <Trash2 />
+            Supprimer
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </ButtonGroup>
   );
 }
 
@@ -105,46 +164,29 @@ export function RecipeView({ recipeId }: RecipeViewProps) {
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <RecipeHeader
-          name={recipe.name}
-          servings={recipe.servings}
-          prepTime={recipe.prepTime}
-          cookTime={recipe.cookTime}
-          totalTime={recipe.totalTime}
-          tags={recipe.tags}
-          sourceUrl={recipe.sourceUrl}
-          sourceLabel={recipe.sourceLabel}
-          photoUrls={photoUrls}
-          notes={recipe.notes}
-        />
-        <div className="flex shrink-0 flex-col gap-2 sm:items-end">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setChatOpen(true)}
-          >
-            <MessageCircle data-icon="inline-start" />
-            Poser une question
-            {conversationCount > 0 ? (
-              <Badge variant="secondary" className="min-w-5 justify-center px-1.5">
-                {conversationCount}
-              </Badge>
-            ) : null}
-          </Button>
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={() => {
+      <RecipeHeader
+        name={recipe.name}
+        servings={recipe.servings}
+        prepTime={recipe.prepTime}
+        cookTime={recipe.cookTime}
+        totalTime={recipe.totalTime}
+        tags={recipe.tags}
+        sourceUrl={recipe.sourceUrl}
+        sourceLabel={recipe.sourceLabel}
+        coverImageUrl={recipe.coverImageUrl}
+        photoUrls={photoUrls}
+        notes={recipe.notes}
+        actions={
+          <RecipeViewActions
+            conversationCount={conversationCount}
+            onAskQuestion={() => setChatOpen(true)}
+            onDelete={() => {
               setDeleteError(null);
               setDeleteOpen(true);
             }}
-          >
-            <Trash2 data-icon="inline-start" />
-            Supprimer
-          </Button>
-        </div>
-      </div>
+          />
+        }
+      />
 
       {deleteError ? <RecipeErrorAlert message={deleteError} /> : null}
 

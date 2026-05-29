@@ -1,12 +1,19 @@
+import { CoverPhotoPicker } from "@/components/recipes/import/cover-photo-picker";
+import { RecipeCoverImage } from "@/components/recipes/recipe-cover-image";
 import { RecipeErrorAlert } from "@/components/recipes/recipe-error-alert";
 import { RecipeForm } from "@/components/recipes/form/recipe-form";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import type { ExtractedRecipe, RecipeDraft } from "@/lib/recipe-types";
+import type { ImportMode } from "@/components/recipes/import/use-recipe-import";
 
 type ImportReviewStepProps = {
+  importMode: ImportMode;
   draft: RecipeDraft;
   extracted: ExtractedRecipe | null;
+  previewUrls: string[];
+  selectedCoverIndex: number;
+  onCoverIndexChange: (index: number) => void;
   error: string | null;
   isReanalyzing: boolean;
   isSaving: boolean;
@@ -17,8 +24,12 @@ type ImportReviewStepProps = {
 };
 
 export function ImportReviewStep({
+  importMode,
   draft,
   extracted,
+  previewUrls,
+  selectedCoverIndex,
+  onCoverIndexChange,
   error,
   isReanalyzing,
   isSaving,
@@ -27,6 +38,8 @@ export function ImportReviewStep({
   onReset,
   onSave,
 }: ImportReviewStepProps) {
+  const coverPreviewUrl =
+    importMode === "url" ? extracted?.coverImageUrl : undefined;
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
       <header className="flex flex-col gap-1">
@@ -39,6 +52,26 @@ export function ImportReviewStep({
       </header>
 
       <form onSubmit={onSave} className="flex flex-col gap-6">
+        {coverPreviewUrl ? (
+          <div className="flex flex-col gap-2">
+            <p className="text-sm font-medium">Image principale</p>
+            <RecipeCoverImage
+              url={coverPreviewUrl}
+              alt={draft.name || "Recette"}
+              variant="hero"
+            />
+          </div>
+        ) : null}
+
+        {importMode === "photos" && previewUrls.length > 0 ? (
+          <CoverPhotoPicker
+            urls={previewUrls}
+            selectedIndex={selectedCoverIndex}
+            onSelect={onCoverIndexChange}
+            altPrefix={draft.name || "Recette"}
+          />
+        ) : null}
+
         <RecipeForm
           value={draft}
           onChange={onDraftChange}

@@ -17,6 +17,8 @@ import {
   MAX_RECIPE_PHOTO_BYTES,
   MAX_RECIPE_PHOTOS,
 } from "./lib/recipeImageLimits";
+import { fetchRecipeCoverImage } from "./lib/recipeCoverDownload";
+import { extractRecipeImageUrlFromHtml } from "./lib/recipePageImage";
 import {
   fetchPageHtml,
   htmlToText,
@@ -86,6 +88,26 @@ async function loadImageParts(
   return imageParts;
 }
 
+async function tryStoreCoverFromPage(
+  ctx: ActionCtx,
+  html: string,
+  pageUrl: URL,
+): Promise<{ coverImageId: Id<"_storage">; coverImageUrl: string | null } | null> {
+  const imageUrl = extractRecipeImageUrlFromHtml(html, pageUrl);
+  if (!imageUrl) {
+    return null;
+  }
+
+  const blob = await fetchRecipeCoverImage(imageUrl);
+  if (!blob) {
+    return null;
+  }
+
+  const coverImageId = await ctx.storage.store(blob);
+  const coverImageUrl = await ctx.storage.getUrl(coverImageId);
+  return { coverImageId, coverImageUrl };
+}
+
 export const extractFromUrl = action({
   args: {
     url: v.string(),
@@ -118,10 +140,14 @@ export const extractFromUrl = action({
       throw new Error("Impossible d'extraire une recette depuis cette page.");
     }
 
+    const cover = await tryStoreCoverFromPage(ctx, html, finalUrl);
+
     return {
       ...normalized,
       sourceUrl: finalUrl.toString(),
       sourceLabel: finalUrl.hostname.replace(/^www\./, ""),
+      coverImageId: cover?.coverImageId,
+      coverImageUrl: cover?.coverImageUrl ?? undefined,
     };
   },
 });

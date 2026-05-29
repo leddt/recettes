@@ -1,10 +1,12 @@
 import { Link } from "react-router";
 
+import { RecipeCoverImage } from "@/components/recipes/recipe-cover-image";
 import { Badge } from "@/components/ui/badge";
 import {
   Item,
   ItemContent,
   ItemDescription,
+  ItemMedia,
   ItemTitle,
 } from "@/components/ui/item";
 import { formatRecipeSummary } from "@/lib/recipe-types";
@@ -19,6 +21,7 @@ export type RecipeListEntry = {
   totalTime?: number;
   sourceUrl?: string;
   tags: string[];
+  coverImageUrl?: string | null;
   source?: "text" | "semantic";
 };
 
@@ -32,7 +35,13 @@ export function RecipeListItem({ recipe }: RecipeListItemProps) {
     recipe.tags.length > 0 ? recipe.tags.join(", ") : undefined;
 
   return (
-    <Item variant="outline" size="sm" render={<Link to={`/recipes/${recipe._id}`} />}>
+    <Item variant="outline" render={<Link to={`/recipes/${recipe._id}`} />}>
+      <ItemMedia variant="image" className="size-16 sm:size-20">
+        <RecipeCoverImage
+          url={recipe.coverImageUrl}
+          alt={recipe.name}
+        />
+      </ItemMedia>
       <ItemContent>
         <ItemTitle>
           {recipe.name}

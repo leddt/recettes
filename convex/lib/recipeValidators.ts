@@ -29,6 +29,8 @@ export const extractedRecipeValidator = v.object({
   sourceUrl: v.optional(v.string()),
   sourceLabel: v.optional(v.string()),
   photos: v.optional(v.array(v.id("_storage"))),
+  coverImageId: v.optional(v.id("_storage")),
+  coverImageUrl: v.optional(v.union(v.string(), v.null())),
 });
 
 export const recipeListItemValidator = v.object({
@@ -40,6 +42,7 @@ export const recipeListItemValidator = v.object({
   totalTime: v.optional(v.number()),
   sourceUrl: v.optional(v.string()),
   tags: v.array(v.string()),
+  coverImageUrl: v.optional(v.union(v.string(), v.null())),
 });
 
 export const recipeSearchResultValidator = v.object({
@@ -55,4 +58,6 @@ export const recipeDetailValidator = v.object({
   sourceLabel: v.optional(v.string()),
   photos: v.optional(v.array(v.id("_storage"))),
   photoUrls: v.optional(v.array(v.union(v.string(), v.null()))),
+  coverImageId: v.optional(v.id("_storage")),
+  coverImageUrl: v.optional(v.union(v.string(), v.null())),
 });

@@ -103,6 +103,9 @@ export const get = query({
       photos && photos.length > 0
         ? await Promise.all(photos.map((photoId) => ctx.storage.getUrl(photoId)))
         : undefined;
+    const coverImageUrl = recipe.coverImageId
+      ? await ctx.storage.getUrl(recipe.coverImageId)
+      : undefined;
 
     return {
       _id: recipe._id,
@@ -117,6 +120,8 @@ export const get = query({
       sourceLabel: recipe.sourceLabel,
       photos,
       photoUrls,
+      coverImageId: recipe.coverImageId,
+      coverImageUrl,
       notes: recipe.notes,
       tags: recipe.tags,
     };
@@ -134,8 +139,8 @@ export const list = query({
 
     const recipes = await ctx.db.query("recipes").withIndex("by_name").collect();
 
-    return recipes
-      .map((recipe) => ({
+    const items = await Promise.all(
+      recipes.map(async (recipe) => ({
         _id: recipe._id,
         name: recipe.name,
         servings: recipe.servings,
@@ -144,8 +149,15 @@ export const list = query({
         totalTime: recipe.totalTime,
         sourceUrl: recipe.sourceUrl,
         tags: recipe.tags,
-      }))
-      .sort((left, right) => left.name.localeCompare(right.name, "fr"));
+        coverImageUrl: recipe.coverImageId
+          ? await ctx.storage.getUrl(recipe.coverImageId)
+          : undefined,
+      })),
+    );
+
+    return items.sort((left, right) =>
+      left.name.localeCompare(right.name, "fr"),
+    );
   },
 });
 
@@ -155,12 +167,20 @@ export const create = mutation({
     sourceUrl: v.optional(v.string()),
     sourceLabel: v.optional(v.string()),
     photos: v.optional(v.array(v.id("_storage"))),
+    coverImageId: v.optional(v.id("_storage")),
   },
   returns: v.id("recipes"),
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (userId === null) {
       throw new Error("Non authentifié.");
+    }
+
+    const photoIds = args.photos ?? [];
+    if (args.coverImageId !== undefined) {
+      if (photoIds.length > 0 && !photoIds.includes(args.coverImageId)) {
+        throw new Error("L'image principale doit faire partie des photos.");
+      }
     }
 
     const { name, ingredients, steps } = validateRecipeDraft(args);
@@ -190,8 +210,8 @@ export const create = mutation({
       totalTime: args.totalTime,
       sourceUrl: args.sourceUrl?.trim() || undefined,
       sourceLabel: args.sourceLabel?.trim() || undefined,
-      photos:
-        args.photos && args.photos.length > 0 ? args.photos : undefined,
+      photos: photoIds.length > 0 ? photoIds : undefined,
+      coverImageId: args.coverImageId,
       notes: args.notes?.trim() || undefined,
       tags,
       searchText,
@@ -301,10 +321,16 @@ export const remove = mutation({
 
     await deleteRecipeChatData(ctx, args.id);
 
-    if (recipe.photos !== undefined) {
-      for (const photoId of recipe.photos) {
-        await ctx.storage.delete(photoId);
-      }
+    const photoIds = new Set(recipe.photos ?? []);
+    if (
+      recipe.coverImageId !== undefined &&
+      !photoIds.has(recipe.coverImageId)
+    ) {
+      await ctx.storage.delete(recipe.coverImageId);
+    }
+
+    for (const photoId of photoIds) {
+      await ctx.storage.delete(photoId);
     }
 
     await ctx.db.delete("recipes", args.id);

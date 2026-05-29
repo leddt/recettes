@@ -15,6 +15,7 @@ import {
   internalMutation,
   internalQuery,
 } from "./_generated/server";
+import type { QueryCtx } from "./_generated/server";
 
 const BACKFILL_BATCH_SIZE = 20;
 const BACKFILL_SEARCH_TEXT_BATCH_SIZE = 50;
@@ -24,7 +25,7 @@ const MIN_QUERY_LENGTH = 2;
 const MIN_ABSOLUTE_VECTOR_SCORE = 0.32;
 const MAX_VECTOR_SCORE_GAP_FROM_TOP = 0.12;
 
-function toListItem(recipe: {
+type RecipeListSource = {
   _id: Id<"recipes">;
   name: string;
   servings?: number;
@@ -33,7 +34,10 @@ function toListItem(recipe: {
   totalTime?: number;
   sourceUrl?: string;
   tags: string[];
-}) {
+  coverImageId?: Id<"_storage">;
+};
+
+async function toListItem(ctx: QueryCtx, recipe: RecipeListSource) {
   return {
     _id: recipe._id,
     name: recipe.name,
@@ -43,6 +47,9 @@ function toListItem(recipe: {
     totalTime: recipe.totalTime,
     sourceUrl: recipe.sourceUrl,
     tags: recipe.tags,
+    coverImageUrl: recipe.coverImageId
+      ? await ctx.storage.getUrl(recipe.coverImageId)
+      : undefined,
   };
 }
 
@@ -139,7 +146,7 @@ export const searchFts = internalQuery({
       .withSearchIndex("search_recipes", (q) => q.search("searchText", trimmedQuery))
       .take(args.limit);
 
-    return recipes.map((recipe) => toListItem(recipe));
+    return Promise.all(recipes.map((recipe) => toListItem(ctx, recipe)));
   },
 });
 
@@ -154,7 +161,7 @@ export const getRecipeListItems = internalQuery({
           return null;
         }
 
-        return toListItem(recipe);
+        return toListItem(ctx, recipe);
       }),
     );
   },
@@ -305,6 +312,7 @@ export const search = action({
       totalTime?: number;
       sourceUrl?: string;
       tags: string[];
+      coverImageUrl?: string | null;
       source: "text" | "semantic";
       score?: number;
     }> = [];

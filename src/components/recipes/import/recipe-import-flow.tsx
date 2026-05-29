@@ -27,8 +27,12 @@ export function RecipeImportFlow() {
 
   return (
     <ImportReviewStep
+      importMode={importState.importMode}
       draft={importState.draft}
       extracted={importState.extracted}
+      previewUrls={importState.previewUrls}
+      selectedCoverIndex={importState.selectedCoverIndex}
+      onCoverIndexChange={importState.setSelectedCoverIndex}
       error={importState.error}
       isReanalyzing={importState.isReanalyzing}
       isSaving={importState.isSaving}

@@ -28,6 +28,8 @@ export type ExtractedRecipe = RecipeDraft & {
   sourceUrl?: string;
   sourceLabel?: string;
   photos?: Id<"_storage">[];
+  coverImageId?: Id<"_storage">;
+  coverImageUrl?: string | null;
 };
 
 export function createEmptyRecipeDraft(): RecipeDraft {

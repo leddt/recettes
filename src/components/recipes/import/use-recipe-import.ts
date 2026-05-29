@@ -63,6 +63,7 @@ export function useRecipeImport() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isReanalyzing, setIsReanalyzing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedCoverIndex, setSelectedCoverIndex] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const previewUrls = useMemo(
@@ -83,6 +84,7 @@ export function useRecipeImport() {
     setError(null);
     setExtracted(null);
     setUploadedPhotoIds([]);
+    setSelectedCoverIndex(0);
     setSelectedFiles([]);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -95,6 +97,7 @@ export function useRecipeImport() {
     setUrl("");
     setSelectedFiles([]);
     setUploadedPhotoIds([]);
+    setSelectedCoverIndex(0);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -128,6 +131,7 @@ export function useRecipeImport() {
       const result = await extractFromUrl({ url: url.trim() });
       setExtracted(result);
       setDraft(extractedToDraft(result));
+      setSelectedCoverIndex(0);
       setStep("review");
     } catch (analyzeError) {
       setError(getImportErrorMessage(analyzeError));
@@ -150,6 +154,7 @@ export function useRecipeImport() {
       setUploadedPhotoIds(storageIds);
       setExtracted(result);
       setDraft(extractedToDraft(result));
+      setSelectedCoverIndex(0);
       setStep("review");
     } catch (analyzeError) {
       setError(getImportErrorMessage(analyzeError));
@@ -179,6 +184,7 @@ export function useRecipeImport() {
         setExtracted(result);
         setDraft(extractedToDraft(result));
         setUploadedPhotoIds(storageIds);
+        setSelectedCoverIndex(0);
         return;
       }
 
@@ -194,6 +200,7 @@ export function useRecipeImport() {
       });
       setExtracted(result);
       setDraft(extractedToDraft(result));
+      setSelectedCoverIndex(0);
     } catch (analyzeError) {
       setError(getImportErrorMessage(analyzeError));
     } finally {
@@ -222,11 +229,21 @@ export function useRecipeImport() {
             : extracted?.photos
           : undefined;
 
+      const coverImageId =
+        importMode === "photos"
+          ? photos && photos.length > 0
+            ? photos[
+                Math.min(selectedCoverIndex, photos.length - 1)
+              ]
+            : undefined
+          : extracted?.coverImageId;
+
       await createRecipe({
         ...normalized,
         sourceUrl: extracted?.sourceUrl,
         sourceLabel: extracted?.sourceLabel,
         photos: photos && photos.length > 0 ? photos : undefined,
+        coverImageId,
       });
       navigate("/");
     } catch (saveError) {
@@ -260,5 +277,7 @@ export function useRecipeImport() {
     handleReanalyzeWithAi,
     handleSave,
     navigate,
+    selectedCoverIndex,
+    setSelectedCoverIndex,
   };
 }

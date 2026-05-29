@@ -9,7 +9,7 @@ export function RecipePhotoGrid({ urls, altPrefix }: RecipePhotoGridProps) {
   }
 
   return (
-    <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+    <ul className="grid grid-cols-5 gap-3">
       {urls.map((url, index) => (
         <li key={`${url}-${index}`} className="overflow-hidden rounded-lg border">
           <img

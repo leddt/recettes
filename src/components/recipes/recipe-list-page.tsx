@@ -46,7 +46,7 @@ function RecipeListSkeleton() {
   return (
     <div className="flex flex-col gap-3">
       {Array.from({ length: 4 }, (_, index) => (
-        <Skeleton key={index} className="h-16 w-full rounded-lg" />
+        <Skeleton key={index} className="h-20 w-full rounded-lg" />
       ))}
     </div>
   );
