@@ -1,7 +1,8 @@
 import { useAction, useMutation } from "convex/react";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router";
 
+import { parseSharedImportUrl } from "@/lib/parse-shared-import-url";
 import {
   createEmptyRecipeDraft,
   normalizeRecipeDraft,
@@ -46,6 +47,7 @@ function extractedToDraft(result: ExtractedRecipe): RecipeDraft {
 
 export function useRecipeImport() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const extractFromUrl = useAction(api.recipeImport.extractFromUrl);
   const extractFromImages = useAction(api.recipeImport.extractFromImages);
   const generateUploadUrl = useMutation(api.files.generateUploadUrl);
@@ -67,6 +69,7 @@ export function useRecipeImport() {
   const [selectedCoverIndex, setSelectedCoverIndex] = useState(0);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
+  const sharedImportStarted = useRef(false);
 
   const previewUrls = useMemo(
     () => selectedFiles.map((file) => URL.createObjectURL(file)),
@@ -159,22 +162,46 @@ export function useRecipeImport() {
     );
   }
 
+  const analyzeUrl = useCallback(
+    async (sourceUrl: string) => {
+      setError(null);
+      setIsAnalyzing(true);
+
+      try {
+        const result = await extractFromUrl({ url: sourceUrl.trim() });
+        setExtracted(result);
+        setDraft(extractedToDraft(result));
+        setSelectedCoverIndex(0);
+        setStep("review");
+      } catch (analyzeError) {
+        setError(getImportErrorMessage(analyzeError));
+      } finally {
+        setIsAnalyzing(false);
+      }
+    },
+    [extractFromUrl],
+  );
+
+  useEffect(() => {
+    if (sharedImportStarted.current) {
+      return;
+    }
+
+    const sharedUrl = parseSharedImportUrl(searchParams);
+    if (!sharedUrl) {
+      return;
+    }
+
+    sharedImportStarted.current = true;
+    setImportMode("url");
+    setUrl(sharedUrl);
+    setSearchParams({}, { replace: true });
+    void analyzeUrl(sharedUrl);
+  }, [analyzeUrl, searchParams, setSearchParams]);
+
   async function handleAnalyzeUrl(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError(null);
-    setIsAnalyzing(true);
-
-    try {
-      const result = await extractFromUrl({ url: url.trim() });
-      setExtracted(result);
-      setDraft(extractedToDraft(result));
-      setSelectedCoverIndex(0);
-      setStep("review");
-    } catch (analyzeError) {
-      setError(getImportErrorMessage(analyzeError));
-    } finally {
-      setIsAnalyzing(false);
-    }
+    await analyzeUrl(url);
   }
 
   async function handleAnalyzePhotos(event: React.FormEvent<HTMLFormElement>) {
