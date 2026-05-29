@@ -25,10 +25,16 @@ import {
   INVALID_LOGIN_MESSAGE,
 } from "@/lib/auth-errors";
 
+const isDev = import.meta.env.DEV;
+
 export function LoginForm() {
   const { signIn } = useAuthActions();
-  const [email, setEmail] = useState<string>(DEFAULT_ACCOUNT.email);
-  const [password, setPassword] = useState<string>(DEFAULT_ACCOUNT.password);
+  const [email, setEmail] = useState<string>(
+    isDev ? DEFAULT_ACCOUNT.email : "",
+  );
+  const [password, setPassword] = useState<string>(
+    isDev ? DEFAULT_ACCOUNT.password : "",
+  );
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -96,10 +102,12 @@ export function LoginForm() {
               />
               {error !== null ? <FieldError>{error}</FieldError> : null}
             </Field>
-            <FieldDescription>
-              Compte de démonstration : {DEFAULT_ACCOUNT.email} /{" "}
-              {DEFAULT_ACCOUNT.password}
-            </FieldDescription>
+            {isDev ? (
+              <FieldDescription>
+                Compte de démonstration : {DEFAULT_ACCOUNT.email} /{" "}
+                {DEFAULT_ACCOUNT.password}
+              </FieldDescription>
+            ) : null}
           </FieldGroup>
         </CardContent>
         <CardFooter>
