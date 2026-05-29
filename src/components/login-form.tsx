@@ -61,14 +61,14 @@ export function LoginForm() {
   }
 
   return (
-    <Card className="w-full max-w-sm">
-      <CardHeader>
-        <CardTitle>Connexion</CardTitle>
-        <CardDescription>
-          Connectez-vous pour accéder à Recettes.
-        </CardDescription>
-      </CardHeader>
-      <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="w-full max-w-sm">
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>Connexion</CardTitle>
+          <CardDescription>
+            Connectez-vous pour accéder à Recettes.
+          </CardDescription>
+        </CardHeader>
         <CardContent>
           <FieldGroup>
             <Field data-invalid={error !== null}>
@@ -122,7 +122,7 @@ export function LoginForm() {
             )}
           </Button>
         </CardFooter>
-      </form>
-    </Card>
+      </Card>
+    </form>
   );
 }
