@@ -5,6 +5,7 @@ import { BrowserRouter } from "react-router";
 import { registerSW } from "virtual:pwa-register";
 
 import { ThemeProvider } from "@/components/theme-provider.tsx";
+import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { convex } from "@/lib/convex";
 
@@ -20,6 +21,7 @@ createRoot(document.getElementById("root")!).render(
         <ThemeProvider>
           <TooltipProvider>
             <App />
+            <Toaster />
           </TooltipProvider>
         </ThemeProvider>
       </ConvexAuthProvider>

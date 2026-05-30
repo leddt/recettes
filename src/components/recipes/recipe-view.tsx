@@ -2,11 +2,14 @@ import { useMutation, useQuery } from "convex/react";
 import {
   ChevronDown,
   ChefHat,
+  Link2,
   MessageCircle,
+  Share2,
   Trash2,
 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { toast } from "sonner";
 
 import { RecipeChatSheet } from "@/components/recipes/chat/recipe-chat-sheet";
 import { useRecipeChatConversations } from "@/components/recipes/chat/use-recipe-chat";
@@ -32,6 +35,11 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 
@@ -77,15 +85,44 @@ function RecipeViewSkeleton() {
 
 type RecipeViewActionsProps = {
   conversationCount: number;
+  recipeName: string;
   onAskQuestion: () => void;
   onDelete: () => void;
 };
 
 function RecipeViewActions({
   conversationCount,
+  recipeName,
   onAskQuestion,
   onDelete,
 }: RecipeViewActionsProps) {
+  const canShare =
+    typeof navigator !== "undefined" && typeof navigator.share === "function";
+
+  async function handleShare() {
+    try {
+      await navigator.share({
+        title: recipeName,
+        url: window.location.href,
+      });
+    } catch (error: unknown) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return;
+      }
+    }
+  }
+
+  async function handleCopyAddress() {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success("Adresse copiée dans le presse-papiers", {
+        position: "top-right",
+      });
+    } catch {
+      toast.error("Impossible de copier l'adresse", { position: "top-right" });
+    }
+  }
+
   return (
     <ButtonGroup>
       <Button type="button" variant="outline" onClick={onAskQuestion}>
@@ -97,6 +134,40 @@ function RecipeViewActions({
           </Badge>
         ) : null}
       </Button>
+      {canShare ? (
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                aria-label="Partager cette recette"
+                onClick={() => void handleShare()}
+              />
+            }
+          >
+            <Share2 />
+          </TooltipTrigger>
+          <TooltipContent>Partager cette recette</TooltipContent>
+        </Tooltip>
+      ) : null}
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              aria-label="Copier l'adresse de cette recette"
+              onClick={() => void handleCopyAddress()}
+            />
+          }
+        >
+          <Link2 />
+        </TooltipTrigger>
+        <TooltipContent>Copier l'adresse de cette recette</TooltipContent>
+      </Tooltip>
       <DropdownMenu>
         <DropdownMenuTrigger
           render={
@@ -202,6 +273,7 @@ export function RecipeView({ recipeId }: RecipeViewProps) {
         actions={
           <RecipeViewActions
             conversationCount={conversationCount}
+            recipeName={recipe.name}
             onAskQuestion={() => setChatOpen(true)}
             onDelete={() => {
               setDeleteError(null);
