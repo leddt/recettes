@@ -256,7 +256,7 @@ export async function extractRecipeWithAiFromImages(
   const completion = await openai.chat.completions.create({
     model: getVisionModel(),
     temperature: 0,
-    max_tokens: 16_384,
+    max_completion_tokens: 16_384,
     messages: [
       {
         role: "system",
