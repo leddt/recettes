@@ -30,7 +30,7 @@ function getImportModel(): string {
 
 /** Import depuis photos (vision). Surcharge via OPENAI_VISION_MODEL. */
 function getVisionModel(): string {
-  return getEnv("OPENAI_VISION_MODEL") ?? "gpt-5.4-mini";
+  return getEnv("OPENAI_VISION_MODEL") ?? "gpt-4.1";
 }
 
 const PHOTO_RECIPE_SYSTEM_PROMPT =
