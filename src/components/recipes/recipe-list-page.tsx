@@ -3,6 +3,7 @@ import { SearchIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 
+import { RecipeActivityFeed } from "@/components/recipes/recipe-activity-feed";
 import { RecipeErrorAlert } from "@/components/recipes/recipe-error-alert";
 import {
   RecipeListItem,
@@ -156,6 +157,7 @@ export function RecipeListPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
+      <RecipeActivityFeed />
       <Card>
         <CardHeader>
           <CardTitle>Vos recettes</CardTitle>

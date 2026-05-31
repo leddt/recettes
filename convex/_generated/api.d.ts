@@ -29,6 +29,7 @@ import type * as lib_recipePageImage from "../lib/recipePageImage.js";
 import type * as lib_recipeSearchText from "../lib/recipeSearchText.js";
 import type * as lib_recipeValidators from "../lib/recipeValidators.js";
 import type * as lib_urlFetch from "../lib/urlFetch.js";
+import type * as presence from "../presence.js";
 import type * as recipeChat from "../recipeChat.js";
 import type * as recipeChatActions from "../recipeChatActions.js";
 import type * as recipeImport from "../recipeImport.js";
@@ -65,6 +66,7 @@ declare const fullApi: ApiFromModules<{
   "lib/recipeSearchText": typeof lib_recipeSearchText;
   "lib/recipeValidators": typeof lib_recipeValidators;
   "lib/urlFetch": typeof lib_urlFetch;
+  presence: typeof presence;
   recipeChat: typeof recipeChat;
   recipeChatActions: typeof recipeChatActions;
   recipeImport: typeof recipeImport;
@@ -100,4 +102,6 @@ export declare const internal: FilterApi<
   FunctionReference<any, "internal">
 >;
 
-export declare const components: {};
+export declare const components: {
+  presence: import("@convex-dev/presence/_generated/component.js").ComponentApi<"presence">;
+};

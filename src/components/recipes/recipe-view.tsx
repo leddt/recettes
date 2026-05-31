@@ -1,3 +1,4 @@
+import usePresence from "@convex-dev/presence/react";
 import { useMutation, useQuery } from "convex/react";
 import {
   ChevronDown,
@@ -46,6 +47,17 @@ import type { Id } from "../../../convex/_generated/dataModel";
 type RecipeViewProps = {
   recipeId: Id<"recipes">;
 };
+
+function RecipeViewPresence({
+  recipeId,
+  userId,
+}: {
+  recipeId: Id<"recipes">;
+  userId: Id<"users">;
+}) {
+  usePresence(api.presence, recipeId, userId, 5000);
+  return null;
+}
 
 function RecipeViewSkeleton() {
   return (
@@ -198,6 +210,7 @@ export function RecipeView({ recipeId }: RecipeViewProps) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const viewer = useQuery(api.users.viewer);
   const recipe = useQuery(api.recipes.get, { id: recipeId });
   const removeRecipe = useMutation(api.recipes.remove);
   const resetCookingProgress = useMutation(api.recipes.resetCookingProgress);
@@ -258,6 +271,9 @@ export function RecipeView({ recipeId }: RecipeViewProps) {
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
+      {viewer ? (
+        <RecipeViewPresence recipeId={recipeId} userId={viewer._id} />
+      ) : null}
       <RecipeHeader
         name={recipe.name}
         servings={recipe.servings}
