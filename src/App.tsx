@@ -3,6 +3,7 @@ import { Navigate, Route, Routes, useParams } from "react-router";
 
 import { LoginForm } from "@/components/login-form";
 import { AppLayout } from "@/components/layout/app-layout";
+import { SettingsPage } from "@/components/settings/settings-page";
 import { RecipeImportFlow } from "@/components/recipes/import/recipe-import-flow";
 import { RecipeListPage } from "@/components/recipes/recipe-list-page";
 import { RecipeView } from "@/components/recipes/recipe-view";
@@ -24,6 +25,7 @@ function AuthenticatedApp() {
       <Route element={<AppLayout />}>
         <Route index element={<RecipeListPage />} />
         <Route path="import" element={<RecipeImportFlow />} />
+        <Route path="settings" element={<SettingsPage />} />
         <Route path="recipes/:recipeId" element={<RecipeViewRoute />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

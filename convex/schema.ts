@@ -31,6 +31,7 @@ export default defineSchema({
     notes: v.optional(v.string()),
     rating: v.optional(v.number()),
     tags: v.array(v.string()),
+    createdBy: v.optional(v.id("users")),
     createdAt: v.number(),
     updatedAt: v.number(),
     searchText: v.optional(v.string()),
@@ -56,4 +57,13 @@ export default defineSchema({
     content: v.string(),
     createdAt: v.number(),
   }).index("by_conversation", ["conversationId", "createdAt"]),
+  pushSubscriptions: defineTable({
+    userId: v.id("users"),
+    endpoint: v.string(),
+    p256dh: v.string(),
+    auth: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_endpoint", ["endpoint"]),
 });

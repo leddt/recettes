@@ -1,10 +1,9 @@
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useQuery } from "convex/react";
-import { LogOutIcon } from "lucide-react";
+import { LogOutIcon, SettingsIcon } from "lucide-react";
 import { Link, Outlet, useLocation } from "react-router";
 
 import { HeaderSettingsMenu } from "@/components/layout/header-settings-menu";
-import { ThemeDropdown } from "@/components/layout/theme-dropdown";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -18,6 +17,7 @@ export function AppLayout() {
   const viewer = useQuery(api.users.viewer);
   const location = useLocation();
   const isHome = location.pathname === "/";
+  const isSettings = location.pathname === "/settings";
 
   return (
     <div className="flex min-h-svh flex-col">
@@ -46,6 +46,24 @@ export function AppLayout() {
             </Button>
           )}
           <div className="hidden items-center gap-2 sm:flex">
+            {!isSettings ? (
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      aria-label="Paramètres"
+                      nativeButton={false}
+                      render={<Link to="/settings" />}
+                    />
+                  }
+                >
+                  <SettingsIcon />
+                </TooltipTrigger>
+                <TooltipContent>Paramètres</TooltipContent>
+              </Tooltip>
+            ) : null}
             <Tooltip>
               <TooltipTrigger
                 render={
@@ -61,7 +79,6 @@ export function AppLayout() {
               </TooltipTrigger>
               <TooltipContent>Se déconnecter</TooltipContent>
             </Tooltip>
-            <ThemeDropdown />
           </div>
           <HeaderSettingsMenu />
         </div>

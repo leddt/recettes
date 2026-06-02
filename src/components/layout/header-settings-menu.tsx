@@ -1,14 +1,13 @@
 import { useAuthActions } from "@convex-dev/auth/react";
-import { LogOutIcon, MoreVerticalIcon } from "lucide-react";
+import { LogOutIcon, MoreVerticalIcon, SettingsIcon } from "lucide-react";
+import { Link } from "react-router";
 
-import { ThemeMenuRadioGroup } from "@/components/layout/theme-dropdown";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -24,7 +23,7 @@ export function HeaderSettingsMenu() {
             size="icon"
             variant="outline"
             className="sm:hidden"
-            aria-label="Paramètres"
+            aria-label="Menu"
           />
         }
       >
@@ -32,8 +31,10 @@ export function HeaderSettingsMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-44">
         <DropdownMenuGroup>
-          <DropdownMenuLabel>Thème</DropdownMenuLabel>
-          <ThemeMenuRadioGroup />
+          <DropdownMenuItem nativeButton={false} render={<Link to="/settings" />}>
+            <SettingsIcon />
+            Paramètres
+          </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem

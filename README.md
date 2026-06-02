@@ -30,11 +30,13 @@ pnpm dev
 
 Cette commande lance `convex dev --start vite` :
 
-| Service | URL |
-|--------|-----|
-| Application (Vite) | http://localhost:5173 |
-| Backend Convex local | http://127.0.0.1:3210 |
-| Tableau de bord Convex | http://127.0.0.1:6790/?d=anonymous-workspace |
+
+| Service                | URL                                                                                          |
+| ---------------------- | -------------------------------------------------------------------------------------------- |
+| Application (Vite)     | [http://localhost:5173](http://localhost:5173)                                               |
+| Backend Convex local   | [http://127.0.0.1:3210](http://127.0.0.1:3210)                                               |
+| Tableau de bord Convex | [http://127.0.0.1:6790/?d=anonymous-workspace](http://127.0.0.1:6790/?d=anonymous-workspace) |
+
 
 Au **premier** `convex dev`, choisir **« Start without an account (run Convex locally) »** pour un backend anonyme local.
 
@@ -58,11 +60,13 @@ pnpm seed
 
 Compte par défaut :
 
-| Champ | Valeur |
-|-------|--------|
-| E-mail | `famille@recettes.local` |
-| Mot de passe | `recettes123` |
-| Nom affiché | Famille |
+
+| Champ        | Valeur                   |
+| ------------ | ------------------------ |
+| E-mail       | `famille@recettes.local` |
+| Mot de passe | `recettes123`            |
+| Nom affiché  | Famille                  |
+
 
 ### 4. Activer l’IA (obligatoire pour import / chat / recherche sémantique)
 
@@ -80,17 +84,19 @@ pnpx convex env list
 
 ## Commandes utiles
 
-| Tâche | Commande |
-|-------|----------|
-| Dev (backend + frontend) | `pnpm dev` |
-| Frontend seul | `pnpm dev:frontend` |
-| Backend Convex seul | `pnpm dev:backend` |
-| Lint | `pnpm lint` |
-| Vérification TypeScript | `pnpm typecheck` |
-| Build production frontend | `pnpm build` |
-| Aperçu du build | `pnpm preview` |
-| Format (Prettier) | `pnpm format` |
-| Compte de test | `pnpm seed` |
+
+| Tâche                     | Commande            |
+| ------------------------- | ------------------- |
+| Dev (backend + frontend)  | `pnpm dev`          |
+| Frontend seul             | `pnpm dev:frontend` |
+| Backend Convex seul       | `pnpm dev:backend`  |
+| Lint                      | `pnpm lint`         |
+| Vérification TypeScript   | `pnpm typecheck`    |
+| Build production frontend | `pnpm build`        |
+| Aperçu du build           | `pnpm preview`      |
+| Format (Prettier)         | `pnpm format`       |
+| Compte de test            | `pnpm seed`         |
+
 
 ## Configuration
 
@@ -98,13 +104,18 @@ pnpx convex env list
 
 Définies avec `pnpx convex env set <NOM> <valeur>` (local) ou via le dashboard / CLI en production (`--prod`).
 
-| Variable | Obligatoire | Description | Valeur par défaut |
-|----------|-------------|-------------|-------------------|
-| `OPENAI_API_KEY` | Oui (IA) | Clé API OpenAI | — |
-| `OPENAI_IMPORT_MODEL` | Non | Modèle pour l’import depuis une **URL** (extraction texte HTML) | `gpt-5.4-mini` |
-| `OPENAI_VISION_MODEL` | Non | Modèle pour l’import depuis des **photos** (vision) | `gpt-4.1` |
-| `OPENAI_CHAT_MODEL` | Non | Modèle du **chat** contextuel sur une recette | `gpt-5.4-mini` |
-| `OPENAI_EMBEDDING_MODEL` | Non | Modèle des **embeddings** (recherche sémantique) | `text-embedding-3-small` |
+
+| Variable                 | Obligatoire | Description                                                     | Valeur par défaut        |
+| ------------------------ | ----------- | --------------------------------------------------------------- | ------------------------ |
+| `OPENAI_API_KEY`         | Oui (IA)    | Clé API OpenAI                                                  | —                        |
+| `OPENAI_IMPORT_MODEL`    | Non         | Modèle pour l’import depuis une **URL** (extraction texte HTML) | `gpt-5.4-mini`           |
+| `OPENAI_VISION_MODEL`    | Non         | Modèle pour l’import depuis des **photos** (vision)             | `gpt-4.1`                |
+| `OPENAI_CHAT_MODEL`      | Non         | Modèle du **chat** contextuel sur une recette                   | `gpt-5.4-mini`           |
+| `OPENAI_EMBEDDING_MODEL` | Non         | Modèle des **embeddings** (recherche sémantique)                | `text-embedding-3-small` |
+| `VAPID_PUBLIC_KEY`       | Non (push)  | Clé publique VAPID pour l’envoi des notifications push          | —                        |
+| `VAPID_PRIVATE_KEY`      | Non (push)  | Clé privée VAPID (secret, côté Convex uniquement)               | —                        |
+| `VAPID_SUBJECT`          | Non (push)  | Contact de l’émetteur push (`mailto:…` ou `https://…`)          | —                        |
+
 
 Exemples de surcharge :
 
@@ -121,26 +132,30 @@ pnpx convex env set OPENAI_API_KEY <clé> --prod
 
 ### Variables générées automatiquement
 
-| Fichier / variable | Rôle |
-|--------------------|------|
-| `.env.local` → `VITE_CONVEX_URL` | URL du déploiement Convex pour le client React (créé par `convex dev`) |
-| `CONVEX_SITE_URL` | Utilisé côté Convex pour la config auth (`convex/auth.config.ts`) |
+
+| Fichier / variable                     | Rôle                                                                       |
+| -------------------------------------- | -------------------------------------------------------------------------- |
+| `.env.local` → `VITE_CONVEX_URL`       | URL du déploiement Convex pour le client React (créé par `convex dev`)     |
+| `.env.local` → `VITE_VAPID_PUBLIC_KEY` | Même clé publique que `VAPID_PUBLIC_KEY` (abonnement push côté navigateur) |
+| `CONVEX_SITE_URL`                      | Utilisé côté Convex pour la config auth (`convex/auth.config.ts`)          |
+
 
 Ne pas committer `.env.local` ni de clés API.
 
 ### Limites applicatives (code)
 
-| Constante | Valeur | Fichier |
-|-----------|--------|---------|
-| Photos par recette | 8 max | `convex/lib/recipeImageLimits.ts` |
-| Taille max par photo | 5 Mo | idem |
-| Dimensions embedding | 1536 | `convex/lib/recipeEmbeddings.ts` (aligné sur `text-embedding-3-small`) |
+
+| Constante            | Valeur | Fichier                                                                |
+| -------------------- | ------ | ---------------------------------------------------------------------- |
+| Photos par recette   | 8 max  | `convex/lib/recipeImageLimits.ts`                                      |
+| Taille max par photo | 5 Mo   | idem                                                                   |
+| Dimensions embedding | 1536   | `convex/lib/recipeEmbeddings.ts` (aligné sur `text-embedding-3-small`) |
+
 
 ### Comptes utilisateurs supplémentaires
 
 - **Seed** : `pnpm seed` (compte famille ci-dessus).
 - **Dashboard Convex** : exécuter la mutation interne `admin:createUserAccount` avec par exemple :
-
   ```json
   { "email": "nouveau@recettes.local", "password": "motdepasse", "name": "Nouveau" }
   ```
@@ -151,13 +166,13 @@ Ne pas committer `.env.local` ni de clés API.
 recettes/
 ├── src/                 # React 19, Vite 7, Tailwind 4, shadcn/ui (UI en français)
 ├── convex/              # Backend Convex (queries, mutations, actions, schéma)
-│   ├── schema.ts        # Tables recipes, chat, auth
+│   ├── schema.ts        # Tables recipes, chat, pushSubscriptions, auth
 │   └── lib/             # IA, embeddings, import URL, etc.
 ├── public/              # Assets PWA
 └── components.json      # Config shadcn/ui
 ```
 
-- **Frontend** : React Router 7, `@convex-dev/auth`, thème clair/sombre, PWA (partage vers `/import`).
+- **Frontend** : React Router 7, `@convex-dev/auth`, thème clair/sombre, PWA (partage vers `/import`, notifications push).
 - **Backend** : Convex (DB temps réel, stockage fichiers, recherche full-text + vectorielle).
 - **Auth** : fournisseur mot de passe (`@convex-dev/auth`).
 - **IA** : OpenAI via actions Convex (`convex/lib/recipeAi.ts`, `recipeChatAi.ts`, `recipeEmbeddings.ts`).
@@ -171,7 +186,66 @@ Il n’y a pas de création manuelle de recette vide : les recettes entrent par 
 - Import depuis une ou plusieurs photos (jusqu’à 8, 5 Mo chacune).
 - Recherche textuelle (index `searchText`) et recherche sémantique (embeddings).
 - Conversations de chat par recette (historique persisté).
+- Page **Paramètres** (`/settings`) : apparence (thème) et notifications push (si configurées).
+- Notifications push lorsqu’un autre membre importe une recette (image de couverture incluse si disponible).
 - PWA installable ; cible de partage `GET /import` pour préremplir l’import depuis une autre app.
+
+## Paramètres (`/settings`)
+
+Accessible via l’icône engrenage (desktop) ou le menu ⋮ → « Paramètres » (mobile).
+
+### Apparence
+
+Choix du thème **Clair**, **Sombre** ou **Système** (préférence persistée dans le navigateur).
+
+### Notifications push
+
+La section n’apparaît que si `VITE_VAPID_PUBLIC_KEY` est définie dans `.env.local`. Sans cette variable, seule la section Apparence est visible.
+
+Lorsqu’un membre importe une recette, les autres membres abonnés reçoivent une notification native. L’auteur de l’import ne reçoit pas sa propre notification.
+
+**Configuration (une fois par déploiement) :**
+
+```bash
+npx web-push generate-vapid-keys
+npx convex env set VAPID_PUBLIC_KEY <clé_publique>
+npx convex env set VAPID_PRIVATE_KEY <clé_privée>
+npx convex env set VAPID_SUBJECT mailto:famille@recettes.local
+```
+
+Ajouter dans `.env.local` (même clé publique) :
+
+```bash
+VITE_VAPID_PUBLIC_KEY=<clé_publique>
+```
+
+Redémarrer `pnpm dev` après modification de `.env.local`.
+
+**Activation par utilisateur :** chaque membre doit activer les notifications sur chaque appareil souhaité (Paramètres → « Activer les notifications » ou « Activer sur cet appareil »). L’interface affiche le nombre d’appareils abonnés, par exemple :
+
+- « Activé sur cet appareil » (un seul appareil, celui-ci)
+- « Activé sur 2 appareils, incluant celui-ci »
+- « Activé sur 2 autres appareils » (activé ailleurs, pas sur l’appareil courant)
+
+Actions disponibles :
+
+
+| Action                      | Effet                                                          |
+| --------------------------- | -------------------------------------------------------------- |
+| Activer sur cet appareil    | Abonne l’appareil courant                                      |
+| Désactiver sur cet appareil | Retire l’abonnement local et serveur de cet appareil           |
+| Désactiver partout          | Supprime tous les abonnements du compte sur tous les appareils |
+
+
+**Prérequis plateforme :**
+
+
+| Plateforme                                | Comportement                                   |
+| ----------------------------------------- | ---------------------------------------------- |
+| Android / Desktop (Chrome, Edge, Firefox) | Push natif, application ouverte ou fermée      |
+| iOS Safari                                | PWA installée sur l’écran d’accueil, iOS 16.4+ |
+| Production                                | HTTPS obligatoire (`localhost` OK en dev)      |
+
 
 ## Maintenance et données
 
@@ -203,7 +277,7 @@ Les composants sont ajoutés sous `src/components/ui` selon [components.json](./
 ## Déploiement (aperçu)
 
 1. Se connecter à Convex : `pnpx convex login`.
-2. Configurer les variables d’environnement en production (`pnpx convex env set ... --prod`), notamment `OPENAI_API_KEY`.
+2. Configurer les variables d’environnement en production (`pnpx convex env set ... --prod`), notamment `OPENAI_API_KEY` et, pour les notifications push, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`.
 3. Déployer le backend **et** builder le frontend en une commande :
 
 ```bash
@@ -212,11 +286,11 @@ pnpx convex deploy --cmd='npm run build'
 
 Cette commande pousse les fonctions Convex vers la production, injecte `VITE_CONVEX_URL` pour le build, puis exécute `npm run build` (`tsc -b && vite build`). Le site statique se trouve dans `dist/`.
 
-4. Héberger le contenu de `dist/` (Vercel, Netlify, etc.). Inutile de définir `VITE_CONVEX_URL` manuellement dans la CI si vous utilisez cette commande.
+1. Héberger le contenu de `dist/` (Vercel, Netlify, etc.). Inutile de définir `VITE_CONVEX_URL` manuellement dans la CI si vous utilisez cette commande.
 
 ### Vercel
 
-Le dépôt inclut un fichier [`vercel.json`](./vercel.json) à la racine. Il redirige toutes les routes vers `index.html` pour que React Router gère le routage côté client (`/import`, `/recipes/:id`, etc.) sans erreur 404 sur un rechargement direct ou un lien profond.
+Le dépôt inclut un fichier `[vercel.json](./vercel.json)` à la racine. Il redirige toutes les routes vers `index.html` pour que React Router gère le routage côté client (`/import`, `/recipes/:id`, etc.) sans erreur 404 sur un rechargement direct ou un lien profond.
 
 ```json
 {
@@ -224,16 +298,21 @@ Le dépôt inclut un fichier [`vercel.json`](./vercel.json) à la racine. Il red
 }
 ```
 
-Sur Vercel : connecter le repo, utiliser la même commande de build que ci-dessus (`pnpx convex deploy --cmd='npm run build'`) et le répertoire de sortie `dist`.
+Sur Vercel : connecter le repo, utiliser la même commande de build que ci-dessus (`pnpx convex deploy --cmd='npm run build'`) et le répertoire de sortie `dist`. Définir aussi `VITE_VAPID_PUBLIC_KEY` dans les variables d’environnement du projet (même valeur que `VAPID_PUBLIC_KEY`).
 
-En développement, utiliser **`pnpx convex dev`** (ou `pnpm dev`), pas `convex deploy`, qui cible la production.
+En développement, utiliser `**pnpx convex dev**` (ou `pnpm dev`), pas `convex deploy`, qui cible la production.
 
 ## Dépannage
 
-| Problème | Piste |
-|----------|--------|
-| Erreur esbuild / Vite | `pnpm rebuild esbuild` |
-| Import ou chat IA indisponible | `pnpx convex env set OPENAI_API_KEY ...` puis redémarrer `pnpm dev` |
-| État local Convex perdu / incohérent | Données anonymes dans `~/.convex/anonymous-convex-backend-state/` |
-| Auth / JWT | Relancer `pnpx @convex-dev/auth` après un nouveau déploiement local |
-| Connexion refusée | Vérifier `pnpm seed` ou créer un compte via `admin:createUserAccount` |
+
+| Problème                             | Piste                                                                                              |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| Erreur esbuild / Vite                | `pnpm rebuild esbuild`                                                                             |
+| Import ou chat IA indisponible       | `pnpx convex env set OPENAI_API_KEY ...` puis redémarrer `pnpm dev`                                |
+| État local Convex perdu / incohérent | Données anonymes dans `~/.convex/anonymous-convex-backend-state/`                                  |
+| Auth / JWT                           | Relancer `pnpx @convex-dev/auth` après un nouveau déploiement local                                |
+| Connexion refusée                    | Vérifier `pnpm seed` ou créer un compte via `admin:createUserAccount`                              |
+| Section Notifications absente        | Ajouter `VITE_VAPID_PUBLIC_KEY` dans `.env.local` et redémarrer Vite                               |
+| Push non reçues                      | Vérifier les clés VAPID côté Convex, l’activation sur l’appareil (Paramètres), HTTPS en production |
+
+

@@ -215,11 +215,16 @@ export const create = mutation({
       notes: args.notes?.trim() || undefined,
       tags,
       searchText,
+      createdBy: userId,
       createdAt: now,
       updatedAt: now,
     });
 
     await ctx.scheduler.runAfter(0, internal.recipeSearch.indexRecipe, {
+      recipeId,
+    });
+
+    await ctx.scheduler.runAfter(0, internal.pushNotifications.sendNewRecipePush, {
       recipeId,
     });
 

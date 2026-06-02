@@ -30,6 +30,8 @@ import type * as lib_recipeSearchText from "../lib/recipeSearchText.js";
 import type * as lib_recipeValidators from "../lib/recipeValidators.js";
 import type * as lib_urlFetch from "../lib/urlFetch.js";
 import type * as presence from "../presence.js";
+import type * as pushNotifications from "../pushNotifications.js";
+import type * as pushSubscriptions from "../pushSubscriptions.js";
 import type * as recipeChat from "../recipeChat.js";
 import type * as recipeChatActions from "../recipeChatActions.js";
 import type * as recipeImport from "../recipeImport.js";
@@ -67,6 +69,8 @@ declare const fullApi: ApiFromModules<{
   "lib/recipeValidators": typeof lib_recipeValidators;
   "lib/urlFetch": typeof lib_urlFetch;
   presence: typeof presence;
+  pushNotifications: typeof pushNotifications;
+  pushSubscriptions: typeof pushSubscriptions;
   recipeChat: typeof recipeChat;
   recipeChatActions: typeof recipeChatActions;
   recipeImport: typeof recipeImport;
