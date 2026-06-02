@@ -48,6 +48,55 @@ function validateRecipeDraft(args: {
   return { name, ingredients, steps };
 }
 
+type RecipeDraftInput = {
+  name: string;
+  ingredients: Array<{
+    name: string;
+    quantity?: string;
+    unit?: string;
+  }>;
+  steps: Array<{ text: string }>;
+  servings?: number;
+  prepTime?: number;
+  cookTime?: number;
+  totalTime?: number;
+  notes?: string;
+  tags: string[];
+};
+
+function normalizeRecipeDraft(args: RecipeDraftInput) {
+  const { name, ingredients, steps } = validateRecipeDraft(args);
+  const normalizedIngredients = ingredients.map((ingredient) => ({
+    name: ingredient.name.trim(),
+    quantity: ingredient.quantity?.trim() || undefined,
+    unit: ingredient.unit?.trim() || undefined,
+  }));
+  const normalizedSteps = steps.map((step) => ({
+    text: step.text.trim(),
+  }));
+  const tags = args.tags.map((tag) => tag.trim()).filter((tag) => tag.length > 0);
+  const notes = args.notes?.trim() || undefined;
+  const searchText = buildRecipeSearchText({
+    name,
+    notes,
+    tags,
+    ingredients: normalizedIngredients,
+  });
+
+  return {
+    name,
+    ingredients: normalizedIngredients,
+    steps: normalizedSteps,
+    servings: args.servings,
+    prepTime: args.prepTime,
+    cookTime: args.cookTime,
+    totalTime: args.totalTime,
+    notes,
+    tags,
+    searchText,
+  };
+}
+
 async function requireAuthenticatedUser(ctx: QueryCtx | MutationCtx) {
   const userId = await getAuthUserId(ctx);
   if (userId === null) {
@@ -183,38 +232,15 @@ export const create = mutation({
       }
     }
 
-    const { name, ingredients, steps } = validateRecipeDraft(args);
+    const normalized = normalizeRecipeDraft(args);
     const now = Date.now();
-    const normalizedIngredients = ingredients.map((ingredient) => ({
-      name: ingredient.name.trim(),
-      quantity: ingredient.quantity?.trim() || undefined,
-      unit: ingredient.unit?.trim() || undefined,
-    }));
-    const tags = args.tags.map((tag) => tag.trim()).filter((tag) => tag.length > 0);
-    const searchText = buildRecipeSearchText({
-      name,
-      notes: args.notes?.trim() || undefined,
-      tags,
-      ingredients: normalizedIngredients,
-    });
 
     const recipeId = await ctx.db.insert("recipes", {
-      name,
-      ingredients: normalizedIngredients,
-      steps: steps.map((step) => ({
-        text: step.text.trim(),
-      })),
-      servings: args.servings,
-      prepTime: args.prepTime,
-      cookTime: args.cookTime,
-      totalTime: args.totalTime,
+      ...normalized,
       sourceUrl: args.sourceUrl?.trim() || undefined,
       sourceLabel: args.sourceLabel?.trim() || undefined,
       photos: photoIds.length > 0 ? photoIds : undefined,
       coverImageId: args.coverImageId,
-      notes: args.notes?.trim() || undefined,
-      tags,
-      searchText,
       createdBy: userId,
       createdAt: now,
       updatedAt: now,
@@ -229,6 +255,69 @@ export const create = mutation({
     });
 
     return recipeId;
+  },
+});
+
+export const update = mutation({
+  args: {
+    id: v.id("recipes"),
+    ...recipeDraftValidator.fields,
+    coverImageId: v.optional(v.id("_storage")),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const recipe = await getRecipeForUser(ctx, args.id);
+    const photoIds = recipe.photos ?? [];
+
+    if (args.coverImageId !== undefined) {
+      if (photoIds.length === 0) {
+        throw new Error("Cette recette n'a pas de photos à choisir comme image principale.");
+      }
+      if (!photoIds.includes(args.coverImageId)) {
+        throw new Error("L'image principale doit faire partie des photos.");
+      }
+    }
+
+    const normalized = normalizeRecipeDraft(args);
+
+    const patch: {
+      name: string;
+      ingredients: typeof normalized.ingredients;
+      steps: typeof normalized.steps;
+      servings?: number;
+      prepTime?: number;
+      cookTime?: number;
+      totalTime?: number;
+      notes?: string;
+      tags: string[];
+      searchText: string;
+      updatedAt: number;
+      coverImageId?: Id<"_storage">;
+    } = {
+      name: normalized.name,
+      ingredients: normalized.ingredients,
+      steps: normalized.steps,
+      servings: normalized.servings,
+      prepTime: normalized.prepTime,
+      cookTime: normalized.cookTime,
+      totalTime: normalized.totalTime,
+      notes: normalized.notes,
+      tags: normalized.tags,
+      searchText: normalized.searchText,
+      updatedAt: Date.now(),
+    };
+
+    if (photoIds.length > 0 && args.coverImageId !== undefined) {
+      patch.coverImageId = args.coverImageId;
+    }
+
+    await ctx.db.patch("recipes", args.id, patch);
+
+    await ctx.scheduler.runAfter(0, internal.recipeSearch.indexRecipe, {
+      recipeId: args.id,
+    });
+
+    return null;
   },
 });
 

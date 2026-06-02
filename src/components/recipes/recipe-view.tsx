@@ -5,6 +5,7 @@ import {
   ChefHat,
   Link2,
   MessageCircle,
+  Pencil,
   Share2,
   Trash2,
 } from "lucide-react";
@@ -96,6 +97,7 @@ function RecipeViewSkeleton() {
 }
 
 type RecipeViewActionsProps = {
+  recipeId: Id<"recipes">;
   conversationCount: number;
   recipeName: string;
   onAskQuestion: () => void;
@@ -103,11 +105,13 @@ type RecipeViewActionsProps = {
 };
 
 function RecipeViewActions({
+  recipeId,
   conversationCount,
   recipeName,
   onAskQuestion,
   onDelete,
 }: RecipeViewActionsProps) {
+  const navigate = useNavigate();
   const canShare =
     typeof navigator !== "undefined" && typeof navigator.share === "function";
 
@@ -194,6 +198,12 @@ function RecipeViewActions({
           <ChevronDown />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <DropdownMenuItem
+            onClick={() => navigate(`/recipes/${recipeId}/edit`)}
+          >
+            <Pencil />
+            Modifier
+          </DropdownMenuItem>
           <DropdownMenuItem variant="destructive" onClick={onDelete}>
             <Trash2 />
             Supprimer
@@ -288,6 +298,7 @@ export function RecipeView({ recipeId }: RecipeViewProps) {
         notes={recipe.notes}
         actions={
           <RecipeViewActions
+            recipeId={recipeId}
             conversationCount={conversationCount}
             recipeName={recipe.name}
             onAskQuestion={() => setChatOpen(true)}

@@ -32,6 +32,50 @@ export type ExtractedRecipe = RecipeDraft & {
   coverImageUrl?: string | null;
 };
 
+export type RecipeDetail = RecipeDraft & {
+  _id: Id<"recipes">;
+  sourceUrl?: string;
+  sourceLabel?: string;
+  photos?: Id<"_storage">[];
+  photoUrls?: Array<string | null>;
+  coverImageId?: Id<"_storage">;
+  coverImageUrl?: string | null;
+};
+
+export function recipeDetailToDraft(recipe: RecipeDetail): RecipeDraft {
+  return {
+    name: recipe.name,
+    ingredients:
+      recipe.ingredients.length > 0
+        ? recipe.ingredients
+        : createEmptyRecipeDraft().ingredients,
+    steps:
+      recipe.steps.length > 0 ? recipe.steps : createEmptyRecipeDraft().steps,
+    servings: recipe.servings,
+    prepTime: recipe.prepTime,
+    cookTime: recipe.cookTime,
+    totalTime: recipe.totalTime,
+    notes: recipe.notes,
+    tags: recipe.tags,
+  };
+}
+
+export function coverIndexFromRecipe(
+  photos: Id<"_storage">[] | undefined,
+  coverImageId: Id<"_storage"> | undefined,
+): number {
+  if (!photos || photos.length === 0) {
+    return 0;
+  }
+
+  if (coverImageId === undefined) {
+    return 0;
+  }
+
+  const index = photos.indexOf(coverImageId);
+  return index >= 0 ? index : 0;
+}
+
 export function createEmptyRecipeDraft(): RecipeDraft {
   return {
     name: "",
