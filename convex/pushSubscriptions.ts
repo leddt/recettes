@@ -1,4 +1,3 @@
-import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 
 import {
@@ -7,6 +6,7 @@ import {
   mutation,
   query,
 } from "./_generated/server";
+import { requireAuthUserId } from "./lib/requireAuth";
 
 const subscriptionDocValidator = v.object({
   _id: v.id("pushSubscriptions"),
@@ -24,11 +24,7 @@ export const save = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (userId === null) {
-      throw new Error("Non authentifié.");
-    }
-
+    const userId = await requireAuthUserId(ctx);
     const existing = await ctx.db
       .query("pushSubscriptions")
       .withIndex("by_endpoint", (q) => q.eq("endpoint", args.endpoint))
@@ -59,11 +55,7 @@ export const remove = mutation({
   args: { endpoint: v.string() },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (userId === null) {
-      throw new Error("Non authentifié.");
-    }
-
+    const userId = await requireAuthUserId(ctx);
     const existing = await ctx.db
       .query("pushSubscriptions")
       .withIndex("by_endpoint", (q) => q.eq("endpoint", args.endpoint))
@@ -84,10 +76,7 @@ export const accountStatus = query({
     endpoints: v.array(v.string()),
   }),
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (userId === null) {
-      return { count: 0, endpoints: [] };
-    }
+    const userId = await requireAuthUserId(ctx);
 
     const subscriptions = await ctx.db
       .query("pushSubscriptions")
@@ -105,11 +94,7 @@ export const removeAll = mutation({
   args: {},
   returns: v.null(),
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (userId === null) {
-      throw new Error("Non authentifié.");
-    }
-
+    const userId = await requireAuthUserId(ctx);
     const subscriptions = await ctx.db
       .query("pushSubscriptions")
       .withIndex("by_user", (q) => q.eq("userId", userId))

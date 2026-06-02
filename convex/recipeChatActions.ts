@@ -1,6 +1,5 @@
 "use node";
 
-import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 
 import { internal } from "./_generated/api";
@@ -9,6 +8,7 @@ import { action } from "./_generated/server";
 import { askRecipeQuestion } from "./lib/recipeChatAi";
 import { buildRecipeChatContext } from "./lib/recipeChatContext";
 import { conversationTitleFromMessage } from "./lib/recipeChatTitle";
+import { requireAuthUserId } from "./lib/requireAuth";
 
 const MAX_CONTEXT_MESSAGES = 40;
 const MAX_USER_MESSAGE_LENGTH = 2_000;
@@ -34,10 +34,7 @@ export const sendMessage = action({
   },
   returns: v.id("recipeChatConversations"),
   handler: async (ctx, args): Promise<Id<"recipeChatConversations">> => {
-    const userId = await getAuthUserId(ctx);
-    if (userId === null) {
-      throw new Error("Non authentifié.");
-    }
+    await requireAuthUserId(ctx);
 
     const trimmed = validateUserContent(args.content);
 

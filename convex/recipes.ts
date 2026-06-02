@@ -1,4 +1,3 @@
-import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 
 import { internal } from "./_generated/api";
@@ -16,6 +15,7 @@ import {
   setStepCheckedAtIndex,
 } from "./lib/recipeCookingProgress";
 import { buildRecipeSearchText } from "./lib/recipeSearchText";
+import { requireAuthUserId } from "./lib/requireAuth";
 import { mutation, query } from "./_generated/server";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 
@@ -97,16 +97,8 @@ function normalizeRecipeDraft(args: RecipeDraftInput) {
   };
 }
 
-async function requireAuthenticatedUser(ctx: QueryCtx | MutationCtx) {
-  const userId = await getAuthUserId(ctx);
-  if (userId === null) {
-    throw new Error("Non authentifié.");
-  }
-  return userId;
-}
-
 async function getRecipeForUser(ctx: QueryCtx | MutationCtx, recipeId: Id<"recipes">) {
-  await requireAuthenticatedUser(ctx);
+  await requireAuthUserId(ctx);
   const recipe = await ctx.db.get("recipes", recipeId);
   if (recipe === null) {
     throw new Error("Recette introuvable.");
@@ -140,7 +132,7 @@ export const get = query({
   args: { id: v.id("recipes") },
   returns: v.union(recipeDetailValidator, v.null()),
   handler: async (ctx, args) => {
-    await requireAuthenticatedUser(ctx);
+    await requireAuthUserId(ctx);
 
     const recipe = await ctx.db.get("recipes", args.id);
     if (recipe === null) {
@@ -181,10 +173,7 @@ export const list = query({
   args: {},
   returns: v.array(recipeListItemValidator),
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (userId === null) {
-      throw new Error("Non authentifié.");
-    }
+    await requireAuthUserId(ctx);
 
     const recipes = await ctx.db.query("recipes").withIndex("by_name").collect();
 
@@ -220,10 +209,7 @@ export const create = mutation({
   },
   returns: v.id("recipes"),
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (userId === null) {
-      throw new Error("Non authentifié.");
-    }
+    const userId = await requireAuthUserId(ctx);
 
     const photoIds = args.photos ?? [];
     if (args.coverImageId !== undefined) {
@@ -403,10 +389,7 @@ export const remove = mutation({
   args: { id: v.id("recipes") },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (userId === null) {
-      throw new Error("Non authentifié.");
-    }
+    await requireAuthUserId(ctx);
 
     const recipe = await ctx.db.get("recipes", args.id);
     if (recipe === null) {

@@ -1,10 +1,10 @@
-import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 
 import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { ingredientValidator, stepValidator } from "./lib/recipeValidators";
+import { requireAuthUserId } from "./lib/requireAuth";
 
 const MAX_STORED_MESSAGES = 100;
 const MAX_CONVERSATIONS = 50;
@@ -169,11 +169,7 @@ export const listConversations = query({
   args: { recipeId: v.id("recipes") },
   returns: v.array(conversationListItemValidator),
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (userId === null) {
-      throw new Error("Non authentifié.");
-    }
-
+    await requireAuthUserId(ctx);
     await assertRecipeExists(ctx, args.recipeId);
 
     const rows = await ctx.db
@@ -196,11 +192,7 @@ export const listMessages = query({
   args: { conversationId: v.id("recipeChatConversations") },
   returns: v.array(chatMessageValidator),
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (userId === null) {
-      throw new Error("Non authentifié.");
-    }
-
+    await requireAuthUserId(ctx);
     const conversation = await ctx.db.get("recipeChatConversations", args.conversationId);
     if (conversation === null) {
       throw new Error("Question introuvable.");
@@ -226,11 +218,7 @@ export const deleteConversation = mutation({
   args: { conversationId: v.id("recipeChatConversations") },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (userId === null) {
-      throw new Error("Non authentifié.");
-    }
-
+    await requireAuthUserId(ctx);
     const conversation = await ctx.db.get("recipeChatConversations", args.conversationId);
     if (conversation === null) {
       throw new Error("Question introuvable.");

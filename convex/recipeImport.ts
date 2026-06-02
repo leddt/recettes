@@ -25,6 +25,7 @@ import {
   isValidRecipeDraft,
   normalizeRecipeDraft,
 } from "./lib/urlFetch";
+import { requireAuthUserId } from "./lib/requireAuth";
 import { action } from "./_generated/server";
 
 type ActionCtx = GenericActionCtx<DataModel>;
@@ -116,10 +117,7 @@ export const extractFromUrl = action({
   },
   returns: extractedRecipeValidator,
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Non authentifié.");
-    }
+    await requireAuthUserId(ctx);
 
     const { html, finalUrl } = await fetchPageHtml(args.url);
     const draft = args.forceAi
@@ -159,10 +157,7 @@ export const extractFromImages = action({
   },
   returns: extractedRecipeValidator,
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Non authentifié.");
-    }
+    await requireAuthUserId(ctx);
 
     const imageParts = await loadImageParts(ctx, args.storageIds);
     const { draft, sourceLabel } = await extractRecipeWithAiFromImages(

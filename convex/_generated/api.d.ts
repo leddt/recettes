@@ -28,6 +28,7 @@ import type * as lib_recipeJsonLd from "../lib/recipeJsonLd.js";
 import type * as lib_recipePageImage from "../lib/recipePageImage.js";
 import type * as lib_recipeSearchText from "../lib/recipeSearchText.js";
 import type * as lib_recipeValidators from "../lib/recipeValidators.js";
+import type * as lib_requireAuth from "../lib/requireAuth.js";
 import type * as lib_urlFetch from "../lib/urlFetch.js";
 import type * as presence from "../presence.js";
 import type * as pushNotifications from "../pushNotifications.js";
@@ -67,6 +68,7 @@ declare const fullApi: ApiFromModules<{
   "lib/recipePageImage": typeof lib_recipePageImage;
   "lib/recipeSearchText": typeof lib_recipeSearchText;
   "lib/recipeValidators": typeof lib_recipeValidators;
+  "lib/requireAuth": typeof lib_requireAuth;
   "lib/urlFetch": typeof lib_urlFetch;
   presence: typeof presence;
   pushNotifications: typeof pushNotifications;

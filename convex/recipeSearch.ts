@@ -1,4 +1,3 @@
-import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 
 import { internal } from "./_generated/api";
@@ -9,6 +8,7 @@ import {
 } from "./lib/recipeValidators";
 import { embedTexts } from "./lib/recipeEmbeddings";
 import { buildRecipeSearchText } from "./lib/recipeSearchText";
+import { requireAuthUserId } from "./lib/requireAuth";
 import {
   action,
   internalAction,
@@ -273,10 +273,7 @@ export const search = action({
   },
   returns: v.array(recipeSearchResultValidator),
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (userId === null) {
-      throw new Error("Non authentifié.");
-    }
+    await requireAuthUserId(ctx);
 
     const trimmedQuery = args.query.trim();
     if (trimmedQuery.length < MIN_QUERY_LENGTH) {

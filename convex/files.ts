@@ -1,4 +1,3 @@
-import { getAuthUserId } from "@convex-dev/auth/server";
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 
@@ -6,6 +5,7 @@ import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { internalMutation, internalQuery, mutation } from "./_generated/server";
 import type { MutationCtx } from "./_generated/server";
+import { requireAuthUserId } from "./lib/requireAuth";
 
 export const ORPHAN_CLEANUP_BATCH_SIZE = 50;
 const ORPHAN_CLEANUP_GRACE_PERIOD_MS = 12 * 60 * 60 * 1000;
@@ -99,10 +99,7 @@ export const generateUploadUrl = mutation({
   args: {},
   returns: v.string(),
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (userId === null) {
-      throw new Error("Non authentifié.");
-    }
+    await requireAuthUserId(ctx);
 
     return await ctx.storage.generateUploadUrl();
   },
