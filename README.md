@@ -114,7 +114,7 @@ Définies avec `pnpx convex env set <NOM> <valeur>` (local) ou via le dashboard 
 | `OPENAI_EMBEDDING_MODEL` | Non         | Modèle des **embeddings** (recherche sémantique)                | `text-embedding-3-small` |
 | `VAPID_PUBLIC_KEY`       | Non (push)  | Clé publique VAPID pour l’envoi des notifications push          | —                        |
 | `VAPID_PRIVATE_KEY`      | Non (push)  | Clé privée VAPID (secret, côté Convex uniquement)               | —                        |
-| `VAPID_SUBJECT`          | Non (push)  | Contact de l’émetteur push (`mailto:…` ou `https://…`)          | —                        |
+| `VAPID_SUBJECT`          | Non (push)  | Identité de l’émetteur VAPID : `mailto:…` en dev ; en prod, l’**autorité** du site (`https://votre-domaine`, sans chemin) | —                        |
 
 
 Exemples de surcharge :
@@ -186,66 +186,40 @@ Il n’y a pas de création manuelle de recette vide : les recettes entrent par 
 - Import depuis une ou plusieurs photos (jusqu’à 8, 5 Mo chacune).
 - Recherche textuelle (index `searchText`) et recherche sémantique (embeddings).
 - Conversations de chat par recette (historique persisté).
-- Page **Paramètres** (`/settings`) : apparence (thème) et notifications push (si configurées).
 - Notifications push lorsqu’un autre membre importe une recette (image de couverture incluse si disponible).
 - PWA installable ; cible de partage `GET /import` pour préremplir l’import depuis une autre app.
 
-## Paramètres (`/settings`)
+## Notifications push
 
-Accessible via l’icône engrenage (desktop) ou le menu ⋮ → « Paramètres » (mobile).
-
-### Apparence
-
-Choix du thème **Clair**, **Sombre** ou **Système** (préférence persistée dans le navigateur).
-
-### Notifications push
-
-La section n’apparaît que si `VITE_VAPID_PUBLIC_KEY` est définie dans `.env.local`. Sans cette variable, seule la section Apparence est visible.
-
-Lorsqu’un membre importe une recette, les autres membres abonnés reçoivent une notification native. L’auteur de l’import ne reçoit pas sa propre notification.
-
-**Configuration (une fois par déploiement) :**
+Configuration **une fois par déploiement** (local ou production avec `--prod` sur les commandes `convex env set`) :
 
 ```bash
 npx web-push generate-vapid-keys
-npx convex env set VAPID_PUBLIC_KEY <clé_publique>
-npx convex env set VAPID_PRIVATE_KEY <clé_privée>
-npx convex env set VAPID_SUBJECT mailto:famille@recettes.local
+pnpx convex env set VAPID_PUBLIC_KEY <clé_publique>
+pnpx convex env set VAPID_PRIVATE_KEY <clé_privée>
 ```
 
-Ajouter dans `.env.local` (même clé publique) :
+`VAPID_SUBJECT` identifie l’émetteur auprès des services push (passé à `web-push` comme « subject ») :
+
+- **Développement local** : une adresse de contact suffit, par ex. `mailto:famille@recettes.local`.
+- **Production** : l’**autorité** du serveur qui sert la PWA, c’est-à-dire l’origine HTTPS du site (schéma + hôte, sans chemin), par ex. `https://recettes.example.com`.
 
 ```bash
-VITE_VAPID_PUBLIC_KEY=<clé_publique>
+# local
+pnpx convex env set VAPID_SUBJECT mailto:famille@recettes.local
+
+# production
+pnpx convex env set VAPID_SUBJECT https://recettes.example.com --prod
 ```
 
-Redémarrer `pnpm dev` après modification de `.env.local`.
+Exposer la même clé publique au build du frontend :
 
-**Activation par utilisateur :** chaque membre doit activer les notifications sur chaque appareil souhaité (Paramètres → « Activer les notifications » ou « Activer sur cet appareil »). L’interface affiche le nombre d’appareils abonnés, par exemple :
+| Environnement | Variable |
+| ------------- | -------- |
+| Développement | `VITE_VAPID_PUBLIC_KEY` dans `.env.local`, puis redémarrer `pnpm dev` |
+| Production (ex. Vercel) | `VITE_VAPID_PUBLIC_KEY` dans les variables du projet hébergeur (même valeur que `VAPID_PUBLIC_KEY`) |
 
-- « Activé sur cet appareil » (un seul appareil, celui-ci)
-- « Activé sur 2 appareils, incluant celui-ci »
-- « Activé sur 2 autres appareils » (activé ailleurs, pas sur l’appareil courant)
-
-Actions disponibles :
-
-
-| Action                      | Effet                                                          |
-| --------------------------- | -------------------------------------------------------------- |
-| Activer sur cet appareil    | Abonne l’appareil courant                                      |
-| Désactiver sur cet appareil | Retire l’abonnement local et serveur de cet appareil           |
-| Désactiver partout          | Supprime tous les abonnements du compte sur tous les appareils |
-
-
-**Prérequis plateforme :**
-
-
-| Plateforme                                | Comportement                                   |
-| ----------------------------------------- | ---------------------------------------------- |
-| Android / Desktop (Chrome, Edge, Firefox) | Push natif, application ouverte ou fermée      |
-| iOS Safari                                | PWA installée sur l’écran d’accueil, iOS 16.4+ |
-| Production                                | HTTPS obligatoire (`localhost` OK en dev)      |
-
+Les push nécessitent **HTTPS** en production. Sur iOS, la PWA doit être installée sur l’écran d’accueil (Safari 16.4+).
 
 ## Maintenance et données
 
@@ -312,7 +286,6 @@ En développement, utiliser `**pnpx convex dev**` (ou `pnpm dev`), pas `convex d
 | État local Convex perdu / incohérent | Données anonymes dans `~/.convex/anonymous-convex-backend-state/`                                  |
 | Auth / JWT                           | Relancer `pnpx @convex-dev/auth` après un nouveau déploiement local                                |
 | Connexion refusée                    | Vérifier `pnpm seed` ou créer un compte via `admin:createUserAccount`                              |
-| Section Notifications absente        | Ajouter `VITE_VAPID_PUBLIC_KEY` dans `.env.local` et redémarrer Vite                               |
-| Push non reçues                      | Vérifier les clés VAPID côté Convex, l’activation sur l’appareil (Paramètres), HTTPS en production |
+| Push non reçues                      | Vérifier les clés VAPID (Convex + `VITE_VAPID_PUBLIC_KEY`), abonnement activé sur l’appareil, HTTPS en production |
 
 
