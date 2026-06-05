@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router";
 import { registerSW } from "virtual:pwa-register";
 
+import { ScrollToTop } from "@/components/scroll-to-top";
 import { ThemeProvider } from "@/components/theme-provider.tsx";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,6 +18,7 @@ registerSW({ immediate: true });
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
+      <ScrollToTop />
       <ConvexAuthProvider client={convex}>
         <ThemeProvider>
           <TooltipProvider>
