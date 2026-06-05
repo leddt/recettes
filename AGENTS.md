@@ -54,6 +54,7 @@ Convex agent skills for common tasks can be installed by running
 
 - **Appearance**: theme selector (light / dark / system), persisted in the browser.
 - **Push notifications**: shown only when `VITE_VAPID_PUBLIC_KEY` is set in `.env.local`. Each user enables notifications per device from this page.
+- **Users**: account management (create, edit, change password, delete). Public sign-up is disabled; additional accounts are created from this UI after the first account exists.
 
 ### Push notifications setup
 

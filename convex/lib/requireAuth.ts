@@ -15,5 +15,13 @@ export async function requireAuthUserId(ctx: AuthCtx): Promise<Id<"users">> {
   if (userId === null) {
     throw new Error("Non authentifié.");
   }
+
+  if ("db" in ctx) {
+    const user = await ctx.db.get("users", userId);
+    if (user === null) {
+      throw new Error("Non authentifié.");
+    }
+  }
+
   return userId;
 }

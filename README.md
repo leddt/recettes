@@ -152,13 +152,14 @@ Ne pas committer `.env.local` ni de clés API.
 | Dimensions embedding | 1536   | `convex/lib/recipeEmbeddings.ts` (aligné sur `text-embedding-3-small`) |
 
 
-### Comptes utilisateurs supplémentaires
+### Comptes utilisateurs
 
-- **Seed** : `pnpm seed` (compte famille ci-dessus).
-- **Dashboard Convex** : exécuter la mutation interne `admin:createUserAccount` avec par exemple :
+- **Développement** : `pnpm seed` (compte famille ci-dessus).
+- **Production — premier compte** : l’inscription publique est désactivée ; créer le compte initial via le dashboard Convex, mutation interne `admin:createUserAccount`, par exemple :
   ```json
   { "email": "nouveau@recettes.local", "password": "motdepasse", "name": "Nouveau" }
   ```
+- **Comptes suivants** : une fois connecté, les autres comptes se gèrent depuis **Paramètres → Utilisateurs** (création, modification, mot de passe, suppression).
 
 ## Architecture
 
@@ -285,7 +286,7 @@ En développement, utiliser `**pnpx convex dev**` (ou `pnpm dev`), pas `convex d
 | Import ou chat IA indisponible       | `pnpx convex env set OPENAI_API_KEY ...` puis redémarrer `pnpm dev`                                |
 | État local Convex perdu / incohérent | Données anonymes dans `~/.convex/anonymous-convex-backend-state/`                                  |
 | Auth / JWT                           | Relancer `pnpx @convex-dev/auth` après un nouveau déploiement local                                |
-| Connexion refusée                    | Vérifier `pnpm seed` ou créer un compte via `admin:createUserAccount`                              |
+| Connexion refusée                    | En dev : `pnpm seed`. En prod (premier compte) : `admin:createUserAccount` via le dashboard Convex |
 | Push non reçues                      | Vérifier les clés VAPID (Convex + `VITE_VAPID_PUBLIC_KEY`), abonnement activé sur l’appareil, HTTPS en production |
 
 

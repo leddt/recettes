@@ -1,7 +1,8 @@
-import { BellIcon, SunMoonIcon } from "lucide-react";
+import { BellIcon, SunMoonIcon, UsersIcon } from "lucide-react";
 
 import { NotificationSettings } from "@/components/layout/notification-settings";
 import { ThemeSettings } from "@/components/settings/theme-settings";
+import { UserSettings } from "@/components/settings/user-settings";
 import { isVapidConfigured } from "@/lib/push-notifications";
 import {
   Card,
@@ -55,6 +56,22 @@ export function SettingsPage() {
         </CardHeader>
         <CardContent>
           <ThemeSettings />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <UsersIcon className="size-5" />
+            Utilisateurs
+          </CardTitle>
+          <CardDescription>
+            Gérez les comptes utilisateurs : création, modification, mot de passe
+            et suppression.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <UserSettings />
         </CardContent>
       </Card>
     </div>

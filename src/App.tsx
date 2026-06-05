@@ -1,6 +1,7 @@
 import { useConvexAuth } from "@convex-dev/auth/react";
 import { Navigate, Route, Routes, useParams } from "react-router";
 
+import { AuthSessionGuard } from "@/components/auth-session-guard";
 import { LoginForm } from "@/components/login-form";
 import { AppLayout } from "@/components/layout/app-layout";
 import { SettingsPage } from "@/components/settings/settings-page";
@@ -64,7 +65,11 @@ export function App() {
     );
   }
 
-  return <AuthenticatedApp />;
+  return (
+    <AuthSessionGuard>
+      <AuthenticatedApp />
+    </AuthSessionGuard>
+  );
 }
 
 export default App;
