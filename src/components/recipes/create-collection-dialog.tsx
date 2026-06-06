@@ -74,7 +74,11 @@ export function CreateCollectionDialog({
   return (
     <Dialog
       open={open}
-      onOpenChange={(nextOpen) => {
+      onOpenChange={(nextOpen, eventDetails) => {
+        if (!nextOpen && isSubmitting) {
+          eventDetails.cancel();
+          return;
+        }
         if (!nextOpen) {
           resetForm();
         }

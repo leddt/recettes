@@ -127,16 +127,6 @@ export function RecipeListPage() {
   );
 
   useEffect(() => {
-    if (
-      collections !== undefined &&
-      selectedCollectionId !== null &&
-      validSelectedCollectionId === null
-    ) {
-      setSelectedCollectionId(null);
-    }
-  }, [collections, selectedCollectionId, validSelectedCollectionId]);
-
-  useEffect(() => {
     const timeoutId = window.setTimeout(() => {
       setDebouncedQuery(searchInput.trim());
     }, SEARCH_DEBOUNCE_MS);
