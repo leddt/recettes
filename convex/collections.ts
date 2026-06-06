@@ -20,7 +20,7 @@ function normalizeCollectionName(name: string): string {
 
 function hasSameCollectionName(left: string, right: string): boolean {
   return (
-    left.localeCompare(right, "fr", { sensitivity: "accent" }) === 0
+    left.localeCompare(right, "fr", { sensitivity: "base" }) === 0
   );
 }
 
@@ -114,6 +114,45 @@ export const create = mutation({
       createdBy: userId,
       createdAt: Date.now(),
     });
+  },
+});
+
+export const createWithOptionalRecipe = mutation({
+  args: {
+    name: v.string(),
+    recipeId: v.optional(v.id("recipes")),
+  },
+  returns: v.id("collections"),
+  handler: async (ctx, args) => {
+    const userId = await requireAuthUserId(ctx);
+    const name = normalizeCollectionName(args.name);
+
+    if (args.recipeId !== undefined) {
+      const recipe = await ctx.db.get("recipes", args.recipeId);
+      if (recipe === null) {
+        throw new Error("Recette introuvable.");
+      }
+    }
+
+    const existingId = await getCollectionByName(ctx, name);
+    if (existingId !== null) {
+      throw new Error("Une collection avec ce nom existe déjà.");
+    }
+
+    const collectionId = await ctx.db.insert("collections", {
+      name,
+      createdBy: userId,
+      createdAt: Date.now(),
+    });
+
+    if (args.recipeId !== undefined) {
+      await ctx.db.insert("recipeCollections", {
+        recipeId: args.recipeId,
+        collectionId,
+      });
+    }
+
+    return collectionId;
   },
 });
 

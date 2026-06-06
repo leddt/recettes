@@ -41,8 +41,7 @@ export function CreateCollectionDialog({
   recipeId,
   onCreated,
 }: CreateCollectionDialogProps) {
-  const createCollection = useMutation(api.collections.create);
-  const addRecipe = useMutation(api.collections.addRecipe);
+  const createCollection = useMutation(api.collections.createWithOptionalRecipe);
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -58,10 +57,7 @@ export function CreateCollectionDialog({
     setIsSubmitting(true);
 
     try {
-      const collectionId = await createCollection({ name });
-      if (recipeId !== undefined) {
-        await addRecipe({ recipeId, collectionId });
-      }
+      const collectionId = await createCollection({ name, recipeId });
       toast.success(`Collection « ${name.trim()} » créée.`, {
         position: "top-right",
       });

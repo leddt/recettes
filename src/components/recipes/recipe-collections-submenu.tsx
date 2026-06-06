@@ -35,6 +35,8 @@ export function RecipeCollectionsSubmenu({
   const addRecipe = useMutation(api.collections.addRecipe);
   const removeRecipe = useMutation(api.collections.removeRecipe);
 
+  const isLoading =
+    collections === undefined || recipeCollectionIds === undefined;
   const membershipSet = new Set(recipeCollectionIds ?? []);
 
   async function handleToggle(
@@ -59,7 +61,7 @@ export function RecipeCollectionsSubmenu({
         Collections
       </DropdownMenuSubTrigger>
       <DropdownMenuSubContent>
-        {collections === undefined ? (
+        {isLoading ? (
           <DropdownMenuItem disabled>Chargement…</DropdownMenuItem>
         ) : collections.length === 0 ? (
           <DropdownMenuItem disabled>Aucune collection</DropdownMenuItem>

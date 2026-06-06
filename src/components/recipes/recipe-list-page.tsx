@@ -108,10 +108,32 @@ export function RecipeListPage() {
   const [searchState, setSearchState] = useState<SearchState | null>(null);
   const [selectedCollectionId, setSelectedCollectionId] =
     useState<Id<"collections"> | null>(null);
+  const validSelectedCollectionId = useMemo(() => {
+    if (selectedCollectionId === null || collections === undefined) {
+      return null;
+    }
+    return collections.some(
+      (collection) => collection._id === selectedCollectionId,
+    )
+      ? selectedCollectionId
+      : null;
+  }, [collections, selectedCollectionId]);
   const recipeIdsInCollection = useQuery(
     api.collections.listRecipeIdsByCollection,
-    selectedCollectionId ? { collectionId: selectedCollectionId } : "skip",
+    validSelectedCollectionId
+      ? { collectionId: validSelectedCollectionId }
+      : "skip",
   );
+
+  useEffect(() => {
+    if (
+      collections !== undefined &&
+      selectedCollectionId !== null &&
+      validSelectedCollectionId === null
+    ) {
+      setSelectedCollectionId(null);
+    }
+  }, [collections, selectedCollectionId, validSelectedCollectionId]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -172,7 +194,7 @@ export function RecipeListPage() {
   const isBaseLoading = isSearchActive
     ? !searchMatchesQuery || searchState.results === null
     : recipes === undefined;
-  const isCollectionFilterActive = selectedCollectionId !== null;
+  const isCollectionFilterActive = validSelectedCollectionId !== null;
   const membershipSet = useMemo(
     () => new Set(recipeIdsInCollection ?? []),
     [recipeIdsInCollection],
@@ -205,7 +227,7 @@ export function RecipeListPage() {
     displayedRecipes.length > 0;
 
   const selectedCollection = collections?.find(
-    (collection) => collection._id === selectedCollectionId,
+    (collection) => collection._id === validSelectedCollectionId,
   );
   const collectionFilterLabel = selectedCollection?.name ?? "Toutes les collections";
 
@@ -250,7 +272,7 @@ export function RecipeListPage() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-48">
                 <DropdownMenuRadioGroup
-                  value={selectedCollectionId ?? "all"}
+                  value={validSelectedCollectionId ?? "all"}
                   onValueChange={(value) => {
                     setSelectedCollectionId(
                       value === "all" ? null : (value as Id<"collections">),
