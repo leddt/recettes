@@ -15,6 +15,8 @@ import { toast } from "sonner";
 
 import { RecipeChatSheet } from "@/components/recipes/chat/recipe-chat-sheet";
 import { useRecipeChatConversations } from "@/components/recipes/chat/use-recipe-chat";
+import { CreateCollectionDialog } from "@/components/recipes/create-collection-dialog";
+import { RecipeCollectionsSubmenu } from "@/components/recipes/recipe-collections-submenu";
 import { RecipeDeleteDialog } from "@/components/recipes/recipe-delete-dialog";
 import { RecipeErrorAlert } from "@/components/recipes/recipe-error-alert";
 import { RecipeHeader } from "@/components/recipes/recipe-header";
@@ -112,6 +114,7 @@ function RecipeViewActions({
   onDelete,
 }: RecipeViewActionsProps) {
   const navigate = useNavigate();
+  const [createCollectionOpen, setCreateCollectionOpen] = useState(false);
   const canShare =
     typeof navigator !== "undefined" && typeof navigator.share === "function";
 
@@ -140,6 +143,7 @@ function RecipeViewActions({
   }
 
   return (
+    <>
     <ButtonGroup>
       <Button type="button" variant="outline" onClick={onAskQuestion}>
         <MessageCircle data-icon="inline-start" />
@@ -198,6 +202,10 @@ function RecipeViewActions({
           <ChevronDown />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <RecipeCollectionsSubmenu
+            recipeId={recipeId}
+            onCreateCollection={() => setCreateCollectionOpen(true)}
+          />
           <DropdownMenuItem
             onClick={() => navigate(`/recipes/${recipeId}/edit`)}
           >
@@ -211,6 +219,12 @@ function RecipeViewActions({
         </DropdownMenuContent>
       </DropdownMenu>
     </ButtonGroup>
+    <CreateCollectionDialog
+      open={createCollectionOpen}
+      onOpenChange={setCreateCollectionOpen}
+      recipeId={recipeId}
+    />
+    </>
   );
 }
 

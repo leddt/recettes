@@ -106,6 +106,20 @@ async function getRecipeForUser(ctx: QueryCtx | MutationCtx, recipeId: Id<"recip
   return recipe;
 }
 
+async function deleteRecipeCollectionMemberships(
+  ctx: MutationCtx,
+  recipeId: Id<"recipes">,
+) {
+  const memberships = await ctx.db
+    .query("recipeCollections")
+    .withIndex("by_recipe", (q) => q.eq("recipeId", recipeId))
+    .collect();
+
+  for (const membership of memberships) {
+    await ctx.db.delete("recipeCollections", membership._id);
+  }
+}
+
 async function deleteRecipeChatData(ctx: MutationCtx, recipeId: Id<"recipes">) {
   const conversations = await ctx.db
     .query("recipeChatConversations")
@@ -397,6 +411,7 @@ export const remove = mutation({
     }
 
     await deleteRecipeChatData(ctx, args.id);
+    await deleteRecipeCollectionMemberships(ctx, args.id);
 
     const photoIds = new Set(recipe.photos ?? []);
     if (
