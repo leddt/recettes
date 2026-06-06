@@ -66,17 +66,9 @@ function RenameCollectionDialog({
   onOpenChange,
 }: RenameCollectionDialogProps) {
   const renameCollection = useMutation(api.collections.rename);
-  const [name, setName] = useState("");
+  const [name, setName] = useState(collection?.name ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [syncedCollectionId, setSyncedCollectionId] =
-    useState<Id<"collections"> | null>(null);
-
-  if (collection !== null && collection._id !== syncedCollectionId) {
-    setSyncedCollectionId(collection._id);
-    setName(collection.name);
-    setError(null);
-  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -99,15 +91,7 @@ function RenameCollectionDialog({
   }
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen) {
-          setSyncedCollectionId(null);
-        }
-        onOpenChange(nextOpen);
-      }}
-    >
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Renommer la collection</DialogTitle>
@@ -301,6 +285,7 @@ export function CollectionSettings() {
       )}
 
       <RenameCollectionDialog
+        key={renameDialogCollection?._id ?? "closed"}
         collection={renameDialogCollection}
         open={renameDialogCollection !== null}
         onOpenChange={(open) => {
