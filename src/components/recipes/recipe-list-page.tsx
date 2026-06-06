@@ -1,6 +1,6 @@
 import { useAction, useQuery } from "convex/react";
-import { SearchIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ChevronDown, SearchIcon } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 
 import { RecipeActivityFeed } from "@/components/recipes/recipe-activity-feed";
@@ -10,6 +10,13 @@ import {
   type RecipeListEntry,
 } from "@/components/recipes/recipe-list-item";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Card,
   CardContent,
@@ -33,6 +40,7 @@ import {
 import { ItemGroup } from "@/components/ui/item";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "../../../convex/_generated/api";
+import type { Id } from "../../../convex/_generated/dataModel";
 
 const SEARCH_DEBOUNCE_MS = 300;
 const MIN_SEARCH_LENGTH = 2;
@@ -53,25 +61,34 @@ function RecipeListSkeleton() {
   );
 }
 
-function RecipeListEmpty({ isSearchActive }: { isSearchActive: boolean }) {
+function RecipeListEmpty({
+  isSearchActive,
+  isCollectionFilterActive,
+}: {
+  isSearchActive: boolean;
+  isCollectionFilterActive: boolean;
+}) {
+  const title = isCollectionFilterActive
+    ? "Aucune recette dans cette collection"
+    : isSearchActive
+      ? "Aucun résultat"
+      : "Aucune recette enregistrée";
+  const description = isCollectionFilterActive
+    ? "Ajoutez des recettes à cette collection depuis le menu d'actions de chaque recette."
+    : isSearchActive
+      ? "Aucune recette ne correspond à votre recherche."
+      : "Importez une recette depuis une URL ou des photos pour commencer.";
+
   return (
     <Empty className="border">
       <EmptyHeader>
         <EmptyMedia variant="icon">
           <SearchIcon />
         </EmptyMedia>
-        <EmptyTitle>
-          {isSearchActive
-            ? "Aucun résultat"
-            : "Aucune recette enregistrée"}
-        </EmptyTitle>
-        <EmptyDescription>
-          {isSearchActive
-            ? "Aucune recette ne correspond à votre recherche."
-            : "Importez une recette depuis une URL ou des photos pour commencer."}
-        </EmptyDescription>
+        <EmptyTitle>{title}</EmptyTitle>
+        <EmptyDescription>{description}</EmptyDescription>
       </EmptyHeader>
-      {!isSearchActive ? (
+      {!isSearchActive && !isCollectionFilterActive ? (
         <EmptyContent>
           <Button nativeButton={false} render={<Link to="/import" />}>
             Importer une recette
@@ -84,10 +101,17 @@ function RecipeListEmpty({ isSearchActive }: { isSearchActive: boolean }) {
 
 export function RecipeListPage() {
   const recipes = useQuery(api.recipes.list);
+  const collections = useQuery(api.collections.list);
   const searchRecipes = useAction(api.recipeSearch.search);
   const [searchInput, setSearchInput] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [searchState, setSearchState] = useState<SearchState | null>(null);
+  const [selectedCollectionId, setSelectedCollectionId] =
+    useState<Id<"collections"> | null>(null);
+  const recipeIdsInCollection = useQuery(
+    api.collections.listRecipeIdsByCollection,
+    selectedCollectionId ? { collectionId: selectedCollectionId } : "skip",
+  );
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -139,21 +163,51 @@ export function RecipeListPage() {
 
   const searchMatchesQuery =
     searchState !== null && searchState.forQuery === debouncedQuery;
-  const displayedRecipes = isSearchActive
+  const baseRecipes = isSearchActive
     ? searchMatchesQuery
       ? searchState.results
       : null
     : recipes;
   const searchError = searchMatchesQuery ? searchState.error : null;
-  const isLoading = isSearchActive
+  const isBaseLoading = isSearchActive
     ? !searchMatchesQuery || searchState.results === null
     : recipes === undefined;
+  const isCollectionFilterActive = selectedCollectionId !== null;
+  const membershipSet = useMemo(
+    () => new Set(recipeIdsInCollection ?? []),
+    [recipeIdsInCollection],
+  );
+  const displayedRecipes = useMemo(() => {
+    if (baseRecipes === null || baseRecipes === undefined) {
+      return baseRecipes;
+    }
+    if (!isCollectionFilterActive) {
+      return baseRecipes;
+    }
+    if (recipeIdsInCollection === undefined) {
+      return null;
+    }
+    return baseRecipes.filter((recipe) => membershipSet.has(recipe._id));
+  }, [
+    baseRecipes,
+    isCollectionFilterActive,
+    membershipSet,
+    recipeIdsInCollection,
+  ]);
+  const isLoading =
+    isBaseLoading ||
+    (isCollectionFilterActive && recipeIdsInCollection === undefined);
 
   const hasRecipes =
     !isLoading &&
     displayedRecipes !== null &&
     displayedRecipes !== undefined &&
     displayedRecipes.length > 0;
+
+  const selectedCollection = collections?.find(
+    (collection) => collection._id === selectedCollectionId,
+  );
+  const collectionFilterLabel = selectedCollection?.name ?? "Toutes les collections";
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
@@ -167,18 +221,57 @@ export function RecipeListPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <InputGroup>
-            <InputGroupAddon align="inline-start">
-              <SearchIcon />
-            </InputGroupAddon>
-            <InputGroupInput
-              type="search"
-              value={searchInput}
-              onChange={(event) => setSearchInput(event.target.value)}
-              placeholder="Rechercher par nom, ingrédient, tag…"
-              aria-label="Rechercher des recettes"
-            />
-          </InputGroup>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <InputGroup className="flex-1">
+              <InputGroupAddon align="inline-start">
+                <SearchIcon />
+              </InputGroupAddon>
+              <InputGroupInput
+                type="search"
+                value={searchInput}
+                onChange={(event) => setSearchInput(event.target.value)}
+                placeholder="Rechercher par nom, ingrédient, tag…"
+                aria-label="Rechercher des recettes"
+              />
+            </InputGroup>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full justify-between sm:w-auto sm:min-w-48"
+                    aria-label="Filtrer par collection"
+                  />
+                }
+              >
+                <span className="truncate">{collectionFilterLabel}</span>
+                <ChevronDown />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-48">
+                <DropdownMenuRadioGroup
+                  value={selectedCollectionId ?? "all"}
+                  onValueChange={(value) => {
+                    setSelectedCollectionId(
+                      value === "all" ? null : (value as Id<"collections">),
+                    );
+                  }}
+                >
+                  <DropdownMenuRadioItem value="all">
+                    Toutes les collections
+                  </DropdownMenuRadioItem>
+                  {collections?.map((collection) => (
+                    <DropdownMenuRadioItem
+                      key={collection._id}
+                      value={collection._id}
+                    >
+                      {collection.name}
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
 
           {searchError ? <RecipeErrorAlert message={searchError} /> : null}
 
@@ -191,7 +284,10 @@ export function RecipeListPage() {
               ))}
             </ItemGroup>
           ) : (
-            <RecipeListEmpty isSearchActive={isSearchActive} />
+            <RecipeListEmpty
+              isSearchActive={isSearchActive}
+              isCollectionFilterActive={isCollectionFilterActive}
+            />
           )}
         </CardContent>
       </Card>

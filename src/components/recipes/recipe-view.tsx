@@ -15,6 +15,7 @@ import { toast } from "sonner";
 
 import { RecipeChatSheet } from "@/components/recipes/chat/recipe-chat-sheet";
 import { useRecipeChatConversations } from "@/components/recipes/chat/use-recipe-chat";
+import { RecipeCollectionsSubmenu } from "@/components/recipes/recipe-collections-submenu";
 import { RecipeDeleteDialog } from "@/components/recipes/recipe-delete-dialog";
 import { RecipeErrorAlert } from "@/components/recipes/recipe-error-alert";
 import { RecipeHeader } from "@/components/recipes/recipe-header";
@@ -198,6 +199,7 @@ function RecipeViewActions({
           <ChevronDown />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <RecipeCollectionsSubmenu recipeId={recipeId} />
           <DropdownMenuItem
             onClick={() => navigate(`/recipes/${recipeId}/edit`)}
           >

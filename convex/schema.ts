@@ -66,4 +66,16 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_endpoint", ["endpoint"]),
+  collections: defineTable({
+    name: v.string(),
+    createdBy: v.optional(v.id("users")),
+    createdAt: v.number(),
+  }).index("by_name", ["name"]),
+  recipeCollections: defineTable({
+    recipeId: v.id("recipes"),
+    collectionId: v.id("collections"),
+  })
+    .index("by_recipe", ["recipeId"])
+    .index("by_collection", ["collectionId"])
+    .index("by_recipe_and_collection", ["recipeId", "collectionId"]),
 });
