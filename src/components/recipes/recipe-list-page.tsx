@@ -108,6 +108,7 @@ export function RecipeListPage() {
   const [searchState, setSearchState] = useState<SearchState | null>(null);
   const [selectedCollectionId, setSelectedCollectionId] =
     useState<Id<"collections"> | null>(null);
+  const [collectionFilterOpen, setCollectionFilterOpen] = useState(false);
   const validSelectedCollectionId = useMemo(() => {
     if (selectedCollectionId === null || collections === undefined) {
       return null;
@@ -256,43 +257,49 @@ export function RecipeListPage() {
                 aria-label="Rechercher des recettes"
               />
             </InputGroup>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full justify-between sm:w-auto sm:min-w-48"
-                    aria-label="Filtrer par collection"
-                  />
-                }
+            {collections !== undefined && collections.length > 0 ? (
+              <DropdownMenu
+                open={collectionFilterOpen}
+                onOpenChange={setCollectionFilterOpen}
               >
-                <span className="truncate">{collectionFilterLabel}</span>
-                <ChevronDown />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="min-w-48">
-                <DropdownMenuRadioGroup
-                  value={validSelectedCollectionId ?? "all"}
-                  onValueChange={(value) => {
-                    setSelectedCollectionId(
-                      value === "all" ? null : (value as Id<"collections">),
-                    );
-                  }}
+                <DropdownMenuTrigger
+                  render={
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full justify-between sm:w-auto sm:min-w-48"
+                      aria-label="Filtrer par collection"
+                    />
+                  }
                 >
-                  <DropdownMenuRadioItem value="all">
-                    Toutes les collections
-                  </DropdownMenuRadioItem>
-                  {collections?.map((collection) => (
-                    <DropdownMenuRadioItem
-                      key={collection._id}
-                      value={collection._id}
-                    >
-                      {collection.name}
+                  <span className="truncate">{collectionFilterLabel}</span>
+                  <ChevronDown />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-48">
+                  <DropdownMenuRadioGroup
+                    value={validSelectedCollectionId ?? "all"}
+                    onValueChange={(value) => {
+                      setSelectedCollectionId(
+                        value === "all" ? null : (value as Id<"collections">),
+                      );
+                      setCollectionFilterOpen(false);
+                    }}
+                  >
+                    <DropdownMenuRadioItem value="all">
+                      Toutes les collections
                     </DropdownMenuRadioItem>
-                  ))}
-                </DropdownMenuRadioGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                    {collections.map((collection) => (
+                      <DropdownMenuRadioItem
+                        key={collection._id}
+                        value={collection._id}
+                      >
+                        {collection.name}
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : null}
           </div>
 
           {searchError ? <RecipeErrorAlert message={searchError} /> : null}
