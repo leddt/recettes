@@ -7,7 +7,7 @@ self.addEventListener("push", (event) => {
     title: "Nouvelle recette",
     body: "Une nouvelle recette a été ajoutée.",
     icon: "/pwa-192x192.png",
-    badge: "/pwa-192x192.png",
+    badge: "/push-badge.png",
     data: { url: "/" },
   };
 

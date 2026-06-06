@@ -38,11 +38,12 @@ export const sendNewRecipePush = internalAction({
     }
 
     const defaultIcon = "/pwa-192x192.png";
+    const pushBadge = "/push-badge.png";
     const payload = JSON.stringify({
       title: "Nouvelle recette",
       body: `${targets.authorName} a ajouté « ${targets.recipeName} »`,
       icon: targets.coverImageUrl ?? defaultIcon,
-      badge: defaultIcon,
+      badge: pushBadge,
       ...(targets.coverImageUrl !== undefined
         ? { image: targets.coverImageUrl }
         : {}),
