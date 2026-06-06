@@ -10,6 +10,12 @@ const collectionValidator = v.object({
   name: v.string(),
 });
 
+const collectionWithRecipeCountValidator = v.object({
+  _id: v.id("collections"),
+  name: v.string(),
+  recipeCount: v.number(),
+});
+
 function normalizeCollectionName(name: string): string {
   const normalized = name.trim();
   if (normalized.length === 0) {
@@ -53,6 +59,38 @@ export const list = query({
       .map((collection) => ({
         _id: collection._id,
         name: collection.name,
+      }))
+      .sort((left, right) =>
+        left.name.localeCompare(right.name, "fr"),
+      );
+  },
+});
+
+export const listWithRecipeCounts = query({
+  args: {},
+  returns: v.array(collectionWithRecipeCountValidator),
+  handler: async (ctx) => {
+    await requireAuthUserId(ctx);
+
+    const collections = await ctx.db
+      .query("collections")
+      .withIndex("by_name")
+      .collect();
+
+    const memberships = await ctx.db.query("recipeCollections").collect();
+    const recipeCountByCollection = new Map<Id<"collections">, number>();
+    for (const membership of memberships) {
+      recipeCountByCollection.set(
+        membership.collectionId,
+        (recipeCountByCollection.get(membership.collectionId) ?? 0) + 1,
+      );
+    }
+
+    return collections
+      .map((collection) => ({
+        _id: collection._id,
+        name: collection.name,
+        recipeCount: recipeCountByCollection.get(collection._id) ?? 0,
       }))
       .sort((left, right) =>
         left.name.localeCompare(right.name, "fr"),
@@ -189,6 +227,60 @@ export const addRecipe = mutation({
       });
     }
 
+    return null;
+  },
+});
+
+export const rename = mutation({
+  args: {
+    collectionId: v.id("collections"),
+    name: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    await requireAuthUserId(ctx);
+    const name = normalizeCollectionName(args.name);
+
+    const collection = await ctx.db.get("collections", args.collectionId);
+    if (collection === null) {
+      throw new Error("Collection introuvable.");
+    }
+
+    if (!hasSameCollectionName(collection.name, name)) {
+      const existingId = await getCollectionByName(ctx, name);
+      if (existingId !== null && existingId !== args.collectionId) {
+        throw new Error("Une collection avec ce nom existe déjà.");
+      }
+    }
+
+    await ctx.db.patch("collections", args.collectionId, { name });
+    return null;
+  },
+});
+
+export const remove = mutation({
+  args: { collectionId: v.id("collections") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    await requireAuthUserId(ctx);
+
+    const collection = await ctx.db.get("collections", args.collectionId);
+    if (collection === null) {
+      throw new Error("Collection introuvable.");
+    }
+
+    const memberships = await ctx.db
+      .query("recipeCollections")
+      .withIndex("by_collection", (q) =>
+        q.eq("collectionId", args.collectionId),
+      )
+      .collect();
+
+    for (const membership of memberships) {
+      await ctx.db.delete("recipeCollections", membership._id);
+    }
+
+    await ctx.db.delete("collections", args.collectionId);
     return null;
   },
 });

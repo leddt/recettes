@@ -1,6 +1,7 @@
-import { BellIcon, SunMoonIcon, UsersIcon } from "lucide-react";
+import { BellIcon, FolderOpenIcon, SunMoonIcon, UsersIcon } from "lucide-react";
 
 import { NotificationSettings } from "@/components/layout/notification-settings";
+import { CollectionSettings } from "@/components/settings/collection-settings";
 import { ThemeSettings } from "@/components/settings/theme-settings";
 import { UserSettings } from "@/components/settings/user-settings";
 import { isVapidConfigured } from "@/lib/push-notifications";
@@ -56,6 +57,21 @@ export function SettingsPage() {
         </CardHeader>
         <CardContent>
           <ThemeSettings />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FolderOpenIcon className="size-5" />
+            Collections
+          </CardTitle>
+          <CardDescription>
+            Gérez vos collections : renommer ou supprimer.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <CollectionSettings />
         </CardContent>
       </Card>
 
