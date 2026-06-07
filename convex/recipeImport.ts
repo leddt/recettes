@@ -19,7 +19,6 @@ import {
 } from "./lib/recipeImageLimits";
 import { fetchRecipeCoverImage } from "./lib/recipeCoverDownload";
 import { extractRecipeImageUrlFromHtml } from "./lib/recipePageImage";
-import { extractRecipeFromSiteHtml } from "./lib/siteRecipeExtractors";
 import {
   fetchPageContent,
   htmlToText,
@@ -131,8 +130,7 @@ export const extractFromUrl = action({
           finalUrl.toString(),
           args.userInstructions,
         )
-      : (extractRecipeFromSiteHtml(html, finalUrl) ??
-        (html.length > 0
+      : ((html.length > 0
           ? extractRecipeFromJsonLd(parseJsonLdBlocks(html))
           : null) ??
         (await extractRecipeWithAiFromText(
