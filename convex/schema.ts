@@ -38,6 +38,7 @@ export default defineSchema({
     embedding: v.optional(v.array(v.float64())),
   })
     .index("by_name", ["name"])
+    .index("by_createdAt", ["createdAt"])
     .searchIndex("search_recipes", {
       searchField: "searchText",
     })

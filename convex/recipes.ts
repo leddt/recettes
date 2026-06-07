@@ -189,9 +189,13 @@ export const list = query({
   handler: async (ctx) => {
     await requireAuthUserId(ctx);
 
-    const recipes = await ctx.db.query("recipes").withIndex("by_name").collect();
+    const recipes = await ctx.db
+      .query("recipes")
+      .withIndex("by_createdAt")
+      .order("desc")
+      .collect();
 
-    const items = await Promise.all(
+    return Promise.all(
       recipes.map(async (recipe) => ({
         _id: recipe._id,
         name: recipe.name,
@@ -205,10 +209,6 @@ export const list = query({
           ? await ctx.storage.getUrl(recipe.coverImageId)
           : undefined,
       })),
-    );
-
-    return items.sort((left, right) =>
-      left.name.localeCompare(right.name, "fr"),
     );
   },
 });
