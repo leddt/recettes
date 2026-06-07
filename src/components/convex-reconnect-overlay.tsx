@@ -41,7 +41,7 @@ export function ConvexReconnectOverlay() {
       aria-live="polite"
       aria-label="Reconnexion en cours"
     >
-      <Spinner className="size-8" />
+      <Spinner className="size-8" aria-hidden="true" role="presentation" />
     </div>
   );
 }

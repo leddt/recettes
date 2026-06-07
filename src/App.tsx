@@ -57,7 +57,7 @@ export function App() {
         role="status"
         aria-label="Chargement"
       >
-        <Spinner className="size-8" />
+        <Spinner className="size-8" aria-hidden="true" role="presentation" />
       </main>
     );
   }
