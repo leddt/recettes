@@ -31,6 +31,10 @@ export function isBlockedPageContent(
   return BLOCKED_PAGE_MARKERS.some((marker) => sample.includes(marker));
 }
 
+export function buildJinaReaderUrl(targetUrl: string): string {
+  return `${JINA_READER_BASE}${encodeURIComponent(targetUrl)}`;
+}
+
 export function parseJinaReaderMarkdown(body: string): {
   title: string;
   markdown: string;
@@ -100,7 +104,7 @@ export async function fetchViaJinaReader(
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const htmlResponse = await fetch(`${JINA_READER_BASE}${url}`, {
+    const htmlResponse = await fetch(buildJinaReaderUrl(url), {
       signal: controller.signal,
       redirect: "follow",
       headers: {
@@ -116,7 +120,7 @@ export async function fetchViaJinaReader(
       }
     }
 
-    const markdownResponse = await fetch(`${JINA_READER_BASE}${url}`, {
+    const markdownResponse = await fetch(buildJinaReaderUrl(url), {
       signal: controller.signal,
       redirect: "follow",
       headers: {

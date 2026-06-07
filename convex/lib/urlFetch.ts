@@ -7,6 +7,7 @@ import {
 const MAX_RESPONSE_BYTES = 2_000_000;
 const FETCH_TIMEOUT_MS = 15_000;
 const MAX_TEXT_LENGTH = 20_000;
+const MAX_REDIRECTS = 5;
 
 const BROWSER_USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
@@ -44,6 +45,7 @@ function isPrivateIpv4(hostname: string): boolean {
   return (
     a === 10 ||
     a === 127 ||
+    a === 169 && b === 254 ||
     (a === 172 && b >= 16 && b <= 31) ||
     (a === 192 && b === 168) ||
     a === 0
@@ -131,26 +133,44 @@ async function fetchPageDirect(
   const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
   try {
-    const response = await fetch(parsedUrl.toString(), {
-      signal: controller.signal,
-      redirect: "follow",
-      headers: {
-        Accept:
-          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "fr-CA,fr;q=0.9,en;q=0.8",
-        "User-Agent": BROWSER_USER_AGENT,
-      },
-    });
+    let currentUrl = parsedUrl;
 
-    const finalUrl = new URL(response.url);
-    validatePublicHttpUrl(finalUrl.toString());
+    for (let redirectCount = 0; redirectCount <= MAX_REDIRECTS; redirectCount += 1) {
+      validatePublicHttpUrl(currentUrl.toString());
 
-    const html = await readResponseWithLimit(response);
-    if (!response.ok || isBlockedPageContent(html, response.status)) {
-      return null;
+      const response = await fetch(currentUrl.toString(), {
+        signal: controller.signal,
+        redirect: "manual",
+        headers: {
+          Accept:
+            "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "Accept-Language": "fr-CA,fr;q=0.9,en;q=0.8",
+          "User-Agent": BROWSER_USER_AGENT,
+        },
+      });
+
+      if (response.status >= 300 && response.status < 400) {
+        const location = response.headers.get("location");
+        if (!location) {
+          return null;
+        }
+
+        currentUrl = new URL(location, currentUrl);
+        continue;
+      }
+
+      const finalUrl = new URL(response.url || currentUrl.toString());
+      validatePublicHttpUrl(finalUrl.toString());
+
+      const html = await readResponseWithLimit(response);
+      if (!response.ok || isBlockedPageContent(html, response.status)) {
+        return null;
+      }
+
+      return { html, finalUrl, status: response.status };
     }
 
-    return { html, finalUrl, status: response.status };
+    return null;
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") {
       throw new Error("La page met trop de temps à répondre.");
