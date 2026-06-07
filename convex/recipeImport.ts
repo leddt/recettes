@@ -20,7 +20,7 @@ import {
 import { fetchRecipeCoverImage } from "./lib/recipeCoverDownload";
 import { extractRecipeImageUrlFromHtml } from "./lib/recipePageImage";
 import {
-  fetchPageHtml,
+  fetchPageContent,
   htmlToText,
   isValidRecipeDraft,
   normalizeRecipeDraft,
@@ -119,16 +119,22 @@ export const extractFromUrl = action({
   handler: async (ctx, args) => {
     await requireAuthUserId(ctx);
 
-    const { html, finalUrl } = await fetchPageHtml(args.url);
+    const page = await fetchPageContent(args.url);
+    const { finalUrl } = page;
+    const pageText = page.text ?? htmlToText(page.html ?? "");
+    const html = page.html ?? "";
+
     const draft = args.forceAi
       ? await extractRecipeWithAiFromText(
-          htmlToText(html),
+          pageText,
           finalUrl.toString(),
           args.userInstructions,
         )
-      : (extractRecipeFromJsonLd(parseJsonLdBlocks(html)) ??
+      : ((html.length > 0
+          ? extractRecipeFromJsonLd(parseJsonLdBlocks(html))
+          : null) ??
         (await extractRecipeWithAiFromText(
-          htmlToText(html),
+          pageText,
           finalUrl.toString(),
           args.userInstructions,
         )));
@@ -138,7 +144,10 @@ export const extractFromUrl = action({
       throw new Error("Impossible d'extraire une recette depuis cette page.");
     }
 
-    const cover = await tryStoreCoverFromPage(ctx, html, finalUrl);
+    const cover =
+      html.length > 0
+        ? await tryStoreCoverFromPage(ctx, html, finalUrl)
+        : null;
 
     return {
       ...normalized,

@@ -1,6 +1,16 @@
+import {
+  fetchViaJinaReader,
+  fetchViaWaybackMachine,
+  isBlockedPageContent,
+} from "./pageFetchFallbacks";
+
 const MAX_RESPONSE_BYTES = 2_000_000;
-const FETCH_TIMEOUT_MS = 10_000;
+const FETCH_TIMEOUT_MS = 15_000;
 const MAX_TEXT_LENGTH = 20_000;
+const MAX_REDIRECTS = 5;
+
+const BROWSER_USER_AGENT =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
 
 const BLOCKED_HOSTNAMES = new Set([
   "localhost",
@@ -35,6 +45,7 @@ function isPrivateIpv4(hostname: string): boolean {
   return (
     a === 10 ||
     a === 127 ||
+    a === 169 && b === 254 ||
     (a === 172 && b >= 16 && b <= 31) ||
     (a === 192 && b === 168) ||
     a === 0
@@ -109,44 +120,117 @@ async function readResponseWithLimit(response: Response): Promise<string> {
   return new TextDecoder("utf-8", { fatal: false }).decode(merged);
 }
 
-export async function fetchPageHtml(url: string): Promise<{ html: string; finalUrl: URL }> {
-  const parsedUrl = validatePublicHttpUrl(url);
+export type FetchedPageContent = {
+  html?: string;
+  text?: string;
+  finalUrl: URL;
+};
+
+async function fetchPageDirect(
+  parsedUrl: URL,
+): Promise<{ html: string; finalUrl: URL; status: number } | null> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
   try {
-    const response = await fetch(parsedUrl.toString(), {
-      signal: controller.signal,
-      redirect: "follow",
-      headers: {
-        Accept: "text/html,application/xhtml+xml",
-        "User-Agent":
-          "RecettesBot/1.0 (+https://recettes.local; recipe import for personal use)",
-      },
-    });
+    let currentUrl = parsedUrl;
 
-    if (!response.ok) {
-      throw new Error("Impossible d'accéder à cette page.");
+    for (let redirectCount = 0; redirectCount <= MAX_REDIRECTS; redirectCount += 1) {
+      validatePublicHttpUrl(currentUrl.toString());
+
+      const response = await fetch(currentUrl.toString(), {
+        signal: controller.signal,
+        redirect: "manual",
+        headers: {
+          Accept:
+            "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "Accept-Language": "fr-CA,fr;q=0.9,en;q=0.8",
+          "User-Agent": BROWSER_USER_AGENT,
+        },
+      });
+
+      if (response.status >= 300 && response.status < 400) {
+        const location = response.headers.get("location");
+        if (!location) {
+          return null;
+        }
+
+        currentUrl = new URL(location, currentUrl);
+        continue;
+      }
+
+      const finalUrl = new URL(response.url || currentUrl.toString());
+      validatePublicHttpUrl(finalUrl.toString());
+
+      const html = await readResponseWithLimit(response);
+      if (!response.ok || isBlockedPageContent(html, response.status)) {
+        return null;
+      }
+
+      return { html, finalUrl, status: response.status };
     }
 
-    const finalUrl = new URL(response.url);
-    validatePublicHttpUrl(finalUrl.toString());
-
-    const html = await readResponseWithLimit(response);
-    return { html, finalUrl };
+    return null;
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") {
       throw new Error("La page met trop de temps à répondre.");
     }
 
-    if (error instanceof Error && error.message.length > 0) {
-      throw error;
-    }
-
-    throw new Error("Impossible d'accéder à cette page.");
+    return null;
   } finally {
     clearTimeout(timeout);
   }
+}
+
+export async function fetchPageContent(url: string): Promise<FetchedPageContent> {
+  const parsedUrl = validatePublicHttpUrl(url);
+
+  const direct = await fetchPageDirect(parsedUrl);
+  if (direct) {
+    return { html: direct.html, finalUrl: direct.finalUrl };
+  }
+
+  try {
+    const jina = await fetchViaJinaReader(
+      parsedUrl.toString(),
+      MAX_RESPONSE_BYTES,
+      FETCH_TIMEOUT_MS,
+    );
+    if (jina.html) {
+      return { html: jina.html, finalUrl: parsedUrl };
+    }
+    if (jina.text) {
+      return { text: jina.text, finalUrl: parsedUrl };
+    }
+  } catch {
+    // Try the next fallback.
+  }
+
+  try {
+    const html = await fetchViaWaybackMachine(
+      parsedUrl.toString(),
+      MAX_RESPONSE_BYTES,
+      FETCH_TIMEOUT_MS,
+    );
+    return { html, finalUrl: parsedUrl };
+  } catch {
+    // Fall through to the user-facing error below.
+  }
+
+  throw new Error(
+    "Impossible d'accéder à cette page. Certains sites bloquent l'import automatique ; essayez l'import par photo.",
+  );
+}
+
+export async function fetchPageHtml(url: string): Promise<{ html: string; finalUrl: URL }> {
+  const page = await fetchPageContent(url);
+  if (!page.html) {
+    throw new Error(
+      "Impossible d'accéder à cette page. Certains sites bloquent l'import automatique ; essayez l'import par photo.",
+    );
+  }
+
+  return { html: page.html, finalUrl: page.finalUrl };
 }
 
 export function htmlToText(html: string): string {
@@ -167,6 +251,20 @@ export function htmlToText(html: string): string {
     .replace(/&gt;/gi, ">")
     .replace(/&quot;/gi, '"')
     .replace(/&#39;/gi, "'")
+    .replace(/&eacute;/gi, "é")
+    .replace(/&Eacute;/gi, "É")
+    .replace(/&egrave;/gi, "è")
+    .replace(/&Egrave;/gi, "È")
+    .replace(/&agrave;/gi, "à")
+    .replace(/&Agrave;/gi, "À")
+    .replace(/&ccedil;/gi, "ç")
+    .replace(/&Ccedil;/gi, "Ç")
+    .replace(/&ocirc;/gi, "ô")
+    .replace(/&icirc;/gi, "î")
+    .replace(/&ucirc;/gi, "û")
+    .replace(/&#(\d+);/g, (_, code: string) =>
+      String.fromCharCode(Number(code)),
+    )
     .replace(/\s+\n/g, "\n")
     .replace(/\n{3,}/g, "\n\n")
     .replace(/[ \t]{2,}/g, " ")
