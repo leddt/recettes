@@ -2,6 +2,7 @@ import { useConvexAuth } from "@convex-dev/auth/react";
 import { Navigate, Route, Routes, useParams } from "react-router";
 
 import { AuthSessionGuard } from "@/components/auth-session-guard";
+import { Spinner } from "@/components/ui/spinner";
 import { LoginForm } from "@/components/login-form";
 import { AppLayout } from "@/components/layout/app-layout";
 import { SettingsPage } from "@/components/settings/settings-page";
@@ -51,8 +52,12 @@ export function App() {
 
   if (isLoading) {
     return (
-      <main className="flex min-h-svh items-center justify-center p-6">
-        <p className="text-sm text-muted-foreground">Chargement...</p>
+      <main
+        className="flex min-h-svh items-center justify-center p-6"
+        role="status"
+        aria-label="Chargement"
+      >
+        <Spinner className="size-8" />
       </main>
     );
   }

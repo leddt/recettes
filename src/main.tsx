@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router";
 import { registerSW } from "virtual:pwa-register";
 
+import { ConvexReconnectOverlay } from "@/components/convex-reconnect-overlay";
 import { ScrollToTop } from "@/components/scroll-to-top";
 import { ThemeProvider } from "@/components/theme-provider.tsx";
 import { Toaster } from "@/components/ui/sonner";
@@ -23,6 +24,7 @@ createRoot(document.getElementById("root")!).render(
         <ThemeProvider>
           <TooltipProvider>
             <App />
+            <ConvexReconnectOverlay />
             <Toaster />
           </TooltipProvider>
         </ThemeProvider>
