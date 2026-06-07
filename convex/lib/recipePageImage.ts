@@ -110,6 +110,7 @@ export function extractRecipeImageUrlFromHtml(
       'meta[name="og:image"]',
       'meta[name="twitter:image"]',
       'meta[property="twitter:image"]',
+      'meta[name="cXenseParse:recs:image"]',
     ]) ?? null;
 
   if (fromMeta) {

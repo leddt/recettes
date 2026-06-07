@@ -1,6 +1,15 @@
+import {
+  fetchViaJinaReader,
+  fetchViaWaybackMachine,
+  isBlockedPageContent,
+} from "./pageFetchFallbacks";
+
 const MAX_RESPONSE_BYTES = 2_000_000;
-const FETCH_TIMEOUT_MS = 10_000;
+const FETCH_TIMEOUT_MS = 15_000;
 const MAX_TEXT_LENGTH = 20_000;
+
+const BROWSER_USER_AGENT =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
 
 const BLOCKED_HOSTNAMES = new Set([
   "localhost",
@@ -109,8 +118,15 @@ async function readResponseWithLimit(response: Response): Promise<string> {
   return new TextDecoder("utf-8", { fatal: false }).decode(merged);
 }
 
-export async function fetchPageHtml(url: string): Promise<{ html: string; finalUrl: URL }> {
-  const parsedUrl = validatePublicHttpUrl(url);
+export type FetchedPageContent = {
+  html?: string;
+  text?: string;
+  finalUrl: URL;
+};
+
+async function fetchPageDirect(
+  parsedUrl: URL,
+): Promise<{ html: string; finalUrl: URL; status: number } | null> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
@@ -119,34 +135,82 @@ export async function fetchPageHtml(url: string): Promise<{ html: string; finalU
       signal: controller.signal,
       redirect: "follow",
       headers: {
-        Accept: "text/html,application/xhtml+xml",
-        "User-Agent":
-          "RecettesBot/1.0 (+https://recettes.local; recipe import for personal use)",
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "fr-CA,fr;q=0.9,en;q=0.8",
+        "User-Agent": BROWSER_USER_AGENT,
       },
     });
-
-    if (!response.ok) {
-      throw new Error("Impossible d'accéder à cette page.");
-    }
 
     const finalUrl = new URL(response.url);
     validatePublicHttpUrl(finalUrl.toString());
 
     const html = await readResponseWithLimit(response);
-    return { html, finalUrl };
+    if (!response.ok || isBlockedPageContent(html, response.status)) {
+      return null;
+    }
+
+    return { html, finalUrl, status: response.status };
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") {
       throw new Error("La page met trop de temps à répondre.");
     }
 
-    if (error instanceof Error && error.message.length > 0) {
-      throw error;
-    }
-
-    throw new Error("Impossible d'accéder à cette page.");
+    return null;
   } finally {
     clearTimeout(timeout);
   }
+}
+
+export async function fetchPageContent(url: string): Promise<FetchedPageContent> {
+  const parsedUrl = validatePublicHttpUrl(url);
+
+  const direct = await fetchPageDirect(parsedUrl);
+  if (direct) {
+    return { html: direct.html, finalUrl: direct.finalUrl };
+  }
+
+  try {
+    const jina = await fetchViaJinaReader(
+      parsedUrl.toString(),
+      MAX_RESPONSE_BYTES,
+      FETCH_TIMEOUT_MS,
+    );
+    if (jina.html) {
+      return { html: jina.html, finalUrl: parsedUrl };
+    }
+    if (jina.text) {
+      return { text: jina.text, finalUrl: parsedUrl };
+    }
+  } catch {
+    // Try the next fallback.
+  }
+
+  try {
+    const html = await fetchViaWaybackMachine(
+      parsedUrl.toString(),
+      MAX_RESPONSE_BYTES,
+      FETCH_TIMEOUT_MS,
+    );
+    return { html, finalUrl: parsedUrl };
+  } catch {
+    // Fall through to the user-facing error below.
+  }
+
+  throw new Error(
+    "Impossible d'accéder à cette page. Certains sites bloquent l'import automatique ; essayez l'import par photo.",
+  );
+}
+
+export async function fetchPageHtml(url: string): Promise<{ html: string; finalUrl: URL }> {
+  const page = await fetchPageContent(url);
+  if (!page.html) {
+    throw new Error(
+      "Impossible d'accéder à cette page. Certains sites bloquent l'import automatique ; essayez l'import par photo.",
+    );
+  }
+
+  return { html: page.html, finalUrl: page.finalUrl };
 }
 
 export function htmlToText(html: string): string {
