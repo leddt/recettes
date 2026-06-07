@@ -3,14 +3,84 @@ import { validatePublicHttpUrl } from "./urlFetch";
 
 const FETCH_TIMEOUT_MS = 10_000;
 
-async function readImageWithLimit(response: Response): Promise<Blob> {
+const GENERIC_CONTENT_TYPES = new Set([
+  "application/octet-stream",
+  "binary/octet-stream",
+]);
+
+function sniffImageContentType(bytes: Uint8Array): string | null {
+  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
+    return "image/jpeg";
+  }
+
+  if (
+    bytes.length >= 8 &&
+    bytes[0] === 0x89 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x4e &&
+    bytes[3] === 0x47 &&
+    bytes[4] === 0x0d &&
+    bytes[5] === 0x0a &&
+    bytes[6] === 0x1a &&
+    bytes[7] === 0x0a
+  ) {
+    return "image/png";
+  }
+
+  if (
+    bytes.length >= 6 &&
+    bytes[0] === 0x47 &&
+    bytes[1] === 0x49 &&
+    bytes[2] === 0x46 &&
+    bytes[3] === 0x38 &&
+    (bytes[4] === 0x37 || bytes[4] === 0x39) &&
+    bytes[5] === 0x61
+  ) {
+    return "image/gif";
+  }
+
+  if (
+    bytes.length >= 12 &&
+    bytes[0] === 0x52 &&
+    bytes[1] === 0x49 &&
+    bytes[2] === 0x46 &&
+    bytes[3] === 0x46 &&
+    bytes[8] === 0x57 &&
+    bytes[9] === 0x45 &&
+    bytes[10] === 0x42 &&
+    bytes[11] === 0x50
+  ) {
+    return "image/webp";
+  }
+
+  return null;
+}
+
+function resolveImageContentType(
+  headerContentType: string | undefined,
+  bytes: Uint8Array,
+): string | null {
+  const normalized = headerContentType?.split(";")[0]?.trim().toLowerCase();
+  if (normalized?.startsWith("image/")) {
+    return normalized;
+  }
+
+  if (normalized !== undefined && !GENERIC_CONTENT_TYPES.has(normalized)) {
+    return null;
+  }
+
+  return sniffImageContentType(bytes);
+}
+
+async function readImageBytesWithLimit(response: Response): Promise<Uint8Array> {
   const reader = response.body?.getReader();
   if (!reader) {
     const blob = await response.blob();
     if (blob.size > MAX_RECIPE_PHOTO_BYTES) {
       throw new Error("Image too large");
     }
-    return blob;
+
+    return new Uint8Array(await blob.arrayBuffer());
   }
 
   const chunks: Uint8Array[] = [];
@@ -37,10 +107,7 @@ async function readImageWithLimit(response: Response): Promise<Blob> {
     offset += chunk.byteLength;
   }
 
-  const contentType =
-    response.headers.get("content-type")?.split(";")[0]?.trim() ?? "image/jpeg";
-
-  return new Blob([merged], { type: contentType });
+  return merged;
 }
 
 export async function fetchRecipeCoverImage(
@@ -66,12 +133,16 @@ export async function fetchRecipeCoverImage(
         return null;
       }
 
-      const contentType = response.headers.get("content-type")?.split(";")[0]?.trim();
-      if (!contentType?.startsWith("image/")) {
+      const bytes = await readImageBytesWithLimit(response);
+      const contentType = resolveImageContentType(
+        response.headers.get("content-type") ?? undefined,
+        bytes,
+      );
+      if (!contentType) {
         return null;
       }
 
-      return await readImageWithLimit(response);
+      return new Blob([Uint8Array.from(bytes)], { type: contentType });
     } finally {
       clearTimeout(timeout);
     }
