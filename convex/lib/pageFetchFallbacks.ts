@@ -1,6 +1,10 @@
 const JINA_READER_BASE = "https://r.jina.ai/";
 const WAYBACK_AVAILABILITY_API =
   "https://archive.org/wayback/available?url=";
+const WAYBACK_LATEST_SNAPSHOT_PREFIX = "http://web.archive.org/web/2/";
+
+const BROWSER_USER_AGENT =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
 
 const BLOCKED_PAGE_MARKERS = [
   "access denied",
@@ -21,11 +25,10 @@ export function isBlockedPageContent(
     return true;
   }
 
-  if (normalized.length < 600) {
-    return BLOCKED_PAGE_MARKERS.some((marker) => normalized.includes(marker));
-  }
+  const sample =
+    normalized.length > 10_000 ? normalized.slice(0, 2_000) : normalized;
 
-  return BLOCKED_PAGE_MARKERS.some((marker) => normalized.includes(marker));
+  return BLOCKED_PAGE_MARKERS.some((marker) => sample.includes(marker));
 }
 
 export function parseJinaReaderMarkdown(body: string): {
@@ -153,6 +156,32 @@ type WaybackAvailability = {
   };
 };
 
+async function fetchWaybackSnapshot(
+  snapshotUrl: string,
+  signal: AbortSignal,
+  maxBytes: number,
+): Promise<string | null> {
+  const snapshotResponse = await fetch(snapshotUrl, {
+    signal,
+    redirect: "follow",
+    headers: {
+      Accept: "text/html,application/xhtml+xml",
+      "User-Agent": BROWSER_USER_AGENT,
+    },
+  });
+
+  if (!snapshotResponse.ok) {
+    return null;
+  }
+
+  const html = await readLimitedResponse(snapshotResponse, maxBytes);
+  if (isBlockedPageContent(html, snapshotResponse.status) || html.length < 1_000) {
+    return null;
+  }
+
+  return html;
+}
+
 export async function fetchViaWaybackMachine(
   url: string,
   maxBytes: number,
@@ -162,46 +191,47 @@ export async function fetchViaWaybackMachine(
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
+    const latestSnapshot = await fetchWaybackSnapshot(
+      `${WAYBACK_LATEST_SNAPSHOT_PREFIX}${url}`,
+      controller.signal,
+      maxBytes,
+    );
+    if (latestSnapshot) {
+      return latestSnapshot;
+    }
+
     const availabilityResponse = await fetch(
       `${WAYBACK_AVAILABILITY_API}${encodeURIComponent(url)}`,
-      { signal: controller.signal },
+      {
+        signal: controller.signal,
+        headers: {
+          Accept: "application/json",
+          "User-Agent": BROWSER_USER_AGENT,
+        },
+      },
     );
 
-    if (!availabilityResponse.ok) {
-      throw new Error("Archive web indisponible.");
+    if (availabilityResponse.ok) {
+      const availability =
+        (await availabilityResponse.json()) as WaybackAvailability;
+      const snapshot = availability.archived_snapshots?.closest;
+      if (
+        snapshot?.available === true &&
+        snapshot.status === "200" &&
+        snapshot.url
+      ) {
+        const archivedSnapshot = await fetchWaybackSnapshot(
+          snapshot.url,
+          controller.signal,
+          maxBytes,
+        );
+        if (archivedSnapshot) {
+          return archivedSnapshot;
+        }
+      }
     }
 
-    const availability =
-      (await availabilityResponse.json()) as WaybackAvailability;
-    const snapshot = availability.archived_snapshots?.closest;
-    if (
-      snapshot?.available !== true ||
-      snapshot.status !== "200" ||
-      !snapshot.url
-    ) {
-      throw new Error("Aucune archive disponible pour cette page.");
-    }
-
-    const snapshotResponse = await fetch(snapshot.url, {
-      signal: controller.signal,
-      redirect: "follow",
-      headers: {
-        Accept: "text/html,application/xhtml+xml",
-        "User-Agent":
-          "Mozilla/5.0 (compatible; RecettesBot/1.0; +https://recettes.local)",
-      },
-    });
-
-    if (!snapshotResponse.ok) {
-      throw new Error("Impossible de lire l'archive de cette page.");
-    }
-
-    const html = await readLimitedResponse(snapshotResponse, maxBytes);
-    if (isBlockedPageContent(html, snapshotResponse.status)) {
-      throw new Error("L'archive de cette page n'est pas utilisable.");
-    }
-
-    return html;
+    throw new Error("Aucune archive disponible pour cette page.");
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") {
       throw new Error("La page met trop de temps à répondre.");
