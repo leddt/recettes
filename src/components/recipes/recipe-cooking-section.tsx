@@ -55,9 +55,8 @@ export function RecipeCookingSection({
           <RecipeIngredientsList
             recipeId={recipeId}
             ingredients={ingredients}
-            embedded
           />
-          <RecipeStepsList recipeId={recipeId} steps={steps} embedded />
+          <RecipeStepsList recipeId={recipeId} steps={steps} />
         </div>
       </CardContent>
     </Card>
