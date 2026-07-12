@@ -1,5 +1,4 @@
 import { useMutation, useQuery } from "convex/react";
-import { ChefHat } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
@@ -8,6 +7,7 @@ import { CoverPhotoPicker } from "@/components/recipes/import/cover-photo-picker
 import { RecipeForm } from "@/components/recipes/form/recipe-form";
 import { RecipeCoverImage } from "@/components/recipes/recipe-cover-image";
 import { RecipeErrorAlert } from "@/components/recipes/recipe-error-alert";
+import { RecipeNotFoundEmpty } from "@/components/recipes/recipe-not-found-empty";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,13 +16,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import {
@@ -79,17 +72,7 @@ export function RecipeEditPage({ recipeId }: RecipeEditPageProps) {
   if (recipe === null) {
     return (
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
-        <Empty>
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <ChefHat />
-            </EmptyMedia>
-            <EmptyTitle>Recette introuvable</EmptyTitle>
-            <EmptyDescription>
-              Cette recette n&apos;existe plus ou l&apos;adresse est incorrecte.
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
+        <RecipeNotFoundEmpty description="Cette recette n'existe plus ou l'adresse est incorrecte." />
       </div>
     );
   }

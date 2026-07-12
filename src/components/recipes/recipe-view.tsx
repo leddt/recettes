@@ -2,7 +2,6 @@ import usePresence from "@convex-dev/presence/react";
 import { useMutation, useQuery } from "convex/react";
 import {
   ChevronDown,
-  ChefHat,
   Link2,
   MessageCircle,
   Pencil,
@@ -20,6 +19,7 @@ import { RecipeCollectionsSubmenu } from "@/components/recipes/recipe-collection
 import { RecipeDeleteDialog } from "@/components/recipes/recipe-delete-dialog";
 import { RecipeErrorAlert } from "@/components/recipes/recipe-error-alert";
 import { RecipeHeader } from "@/components/recipes/recipe-header";
+import { RecipeNotFoundEmpty } from "@/components/recipes/recipe-not-found-empty";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
@@ -31,13 +31,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { RecipeCookingSection } from "@/components/recipes/recipe-cooking-section";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Tooltip,
@@ -268,17 +261,7 @@ export function RecipeView({ recipeId }: RecipeViewProps) {
       <div className="mx-auto w-full max-w-4xl">
         <Card>
           <CardContent>
-            <Empty>
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <ChefHat />
-                </EmptyMedia>
-                <EmptyTitle>Recette introuvable</EmptyTitle>
-                <EmptyDescription>
-                  Cette recette n&apos;existe plus ou n&apos;est pas accessible.
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
+            <RecipeNotFoundEmpty />
           </CardContent>
         </Card>
       </div>

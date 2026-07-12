@@ -3,6 +3,7 @@ import { KeyRoundIcon, PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { ItemListSkeleton } from "@/components/item-list-skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDestructiveDialog } from "@/components/ui/confirm-destructive-dialog";
@@ -22,7 +23,6 @@ import {
   ItemTitle,
 } from "@/components/ui/item";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/errors";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
@@ -346,15 +346,6 @@ function DeleteUserDialog({ user, open, onOpenChange }: DeleteUserDialogProps) {
   );
 }
 
-function UserListSkeleton() {
-  return (
-    <ItemGroup>
-      <Skeleton className="h-[4.5rem] w-full rounded-lg" />
-      <Skeleton className="h-[4.5rem] w-full rounded-lg" />
-    </ItemGroup>
-  );
-}
-
 export function UserSettings() {
   const viewer = useQuery(api.users.viewer);
   const users = useQuery(api.users.list);
@@ -369,7 +360,7 @@ export function UserSettings() {
   );
 
   if (users === undefined || viewer === undefined) {
-    return <UserListSkeleton />;
+    return <ItemListSkeleton />;
   }
 
   const userCountLabel =
