@@ -8,11 +8,9 @@ import {
   recipeListItemValidator,
 } from "./lib/recipeValidators";
 import {
-  clearCookingProgress,
-  clearStepCookingProgress,
+  clearCheckedFlags,
   hasCookingProgress,
-  setIngredientCheckedAtIndex,
-  setStepCheckedAtIndex,
+  setCheckedAtIndex,
 } from "./lib/recipeCookingProgress";
 import {
   getRecipeDraftValidationError,
@@ -285,7 +283,7 @@ export const setIngredientChecked = mutation({
     }
 
     await ctx.db.patch("recipes", args.id, {
-      ingredients: setIngredientCheckedAtIndex(
+      ingredients: setCheckedAtIndex(
         recipe.ingredients,
         args.index,
         args.checked,
@@ -316,7 +314,7 @@ export const setStepCompleted = mutation({
     }
 
     await ctx.db.patch("recipes", args.id, {
-      steps: setStepCheckedAtIndex(recipe.steps, args.index, args.completed),
+      steps: setCheckedAtIndex(recipe.steps, args.index, args.completed),
       updatedAt: Date.now(),
     });
 
@@ -335,8 +333,8 @@ export const resetCookingProgress = mutation({
     }
 
     await ctx.db.patch("recipes", args.id, {
-      ingredients: clearCookingProgress(recipe.ingredients),
-      steps: clearStepCookingProgress(recipe.steps),
+      ingredients: clearCheckedFlags(recipe.ingredients),
+      steps: clearCheckedFlags(recipe.steps),
       updatedAt: Date.now(),
     });
 
