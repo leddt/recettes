@@ -18,6 +18,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
+import { FormDialog } from "@/components/ui/form-dialog";
 import {
   Item,
   ItemActions,
@@ -29,6 +30,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
+import { getErrorMessage } from "@/lib/errors";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 
@@ -37,12 +39,6 @@ type CollectionListItem = {
   name: string;
   recipeCount: number;
 };
-
-function getErrorMessage(error: unknown): string {
-  return error instanceof Error
-    ? error.message
-    : "Une erreur inattendue s'est produite.";
-}
 
 function formatRecipeCount(count: number): string {
   if (count === 0) {
@@ -91,53 +87,32 @@ function RenameCollectionDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Renommer la collection</DialogTitle>
-          <DialogDescription>
-            Modifiez le nom de la collection.
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <FieldGroup>
-            <Field data-invalid={error !== null}>
-              <FieldLabel htmlFor="rename-collection-name">Nom</FieldLabel>
-              <Input
-                id="rename-collection-name"
-                value={name}
-                onChange={(event) => {
-                  setError(null);
-                  setName(event.target.value);
-                }}
-                required
-              />
-              {error !== null ? <FieldError>{error}</FieldError> : null}
-            </Field>
-          </FieldGroup>
-          <DialogFooter className="mt-6">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={isSubmitting}
-              onClick={() => onOpenChange(false)}
-            >
-              Annuler
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <>
-                  <Spinner data-icon="inline-start" />
-                  Enregistrement...
-                </>
-              ) : (
-                "Enregistrer"
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+    <FormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Renommer la collection"
+      description="Modifiez le nom de la collection."
+      onSubmit={handleSubmit}
+      isSubmitting={isSubmitting}
+      submitLabel="Enregistrer"
+      pendingLabel="Enregistrement..."
+    >
+      <FieldGroup>
+        <Field data-invalid={error !== null}>
+          <FieldLabel htmlFor="rename-collection-name">Nom</FieldLabel>
+          <Input
+            id="rename-collection-name"
+            value={name}
+            onChange={(event) => {
+              setError(null);
+              setName(event.target.value);
+            }}
+            required
+          />
+          {error !== null ? <FieldError>{error}</FieldError> : null}
+        </Field>
+      </FieldGroup>
+    </FormDialog>
   );
 }
 

@@ -10,6 +10,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu";
+import { getErrorMessage } from "@/lib/errors";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 
@@ -17,12 +18,6 @@ type RecipeCollectionsSubmenuProps = {
   recipeId: Id<"recipes">;
   onCreateCollection: () => void;
 };
-
-function getErrorMessage(error: unknown): string {
-  return error instanceof Error
-    ? error.message
-    : "Une erreur inattendue s'est produite.";
-}
 
 export function RecipeCollectionsSubmenu({
   recipeId,

@@ -1,3 +1,5 @@
+import { extractErrorMessage } from "@/lib/errors";
+
 const INVALID_CREDENTIALS_PATTERNS = [
   "Invalid credentials",
   "InvalidAccountId",
@@ -6,21 +8,6 @@ const INVALID_CREDENTIALS_PATTERNS = [
 
 export const INVALID_LOGIN_MESSAGE =
   "Courriel ou mot de passe incorrect. Vérifiez vos identifiants et réessayez.";
-
-function extractErrorMessage(error: unknown): string | null {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  if (typeof error === "object" && error !== null && "message" in error) {
-    const message = (error as { message: unknown }).message;
-    if (typeof message === "string") {
-      return message;
-    }
-  }
-
-  return null;
-}
 
 export function getLoginErrorMessage(error: unknown): string {
   const message = extractErrorMessage(error);
