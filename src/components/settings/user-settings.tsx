@@ -20,6 +20,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
+import { FormDialog } from "@/components/ui/form-dialog";
 import {
   Item,
   ItemActions,
@@ -31,6 +32,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
+import { getErrorMessage } from "@/lib/errors";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 
@@ -45,12 +47,6 @@ function formatUserLabel(user: UserListItem): string {
     return `${user.name} (${user.email})`;
   }
   return user.name ?? user.email ?? "Utilisateur";
-}
-
-function getErrorMessage(error: unknown): string {
-  return error instanceof Error
-    ? error.message
-    : "Une erreur inattendue s'est produite.";
 }
 
 type CreateUserDialogProps = {
@@ -91,91 +87,62 @@ function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) {
   }
 
   return (
-    <Dialog
+    <FormDialog
       open={open}
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen) {
-          resetForm();
-        }
-        onOpenChange(nextOpen);
-      }}
+      onOpenChange={onOpenChange}
+      title="Créer un compte"
+      description="Ajoutez un nouveau compte utilisateur. Il pourra se connecter avec ce courriel et ce mot de passe."
+      onSubmit={handleSubmit}
+      isSubmitting={isSubmitting}
+      submitLabel="Créer le compte"
+      pendingLabel="Création..."
+      onClose={resetForm}
     >
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Créer un compte</DialogTitle>
-          <DialogDescription>
-            Ajoutez un nouveau compte utilisateur. Il pourra se connecter avec ce
-            courriel et ce mot de passe.
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <FieldGroup>
-            <Field data-invalid={error !== null}>
-              <FieldLabel htmlFor="create-user-name">Nom</FieldLabel>
-              <Input
-                id="create-user-name"
-                value={name}
-                onChange={(event) => {
-                  setError(null);
-                  setName(event.target.value);
-                }}
-                required
-              />
-            </Field>
-            <Field data-invalid={error !== null}>
-              <FieldLabel htmlFor="create-user-email">Courriel</FieldLabel>
-              <Input
-                id="create-user-email"
-                type="email"
-                autoComplete="email"
-                value={email}
-                onChange={(event) => {
-                  setError(null);
-                  setEmail(event.target.value);
-                }}
-                required
-              />
-            </Field>
-            <Field data-invalid={error !== null}>
-              <FieldLabel htmlFor="create-user-password">Mot de passe</FieldLabel>
-              <Input
-                id="create-user-password"
-                type="password"
-                autoComplete="new-password"
-                value={password}
-                onChange={(event) => {
-                  setError(null);
-                  setPassword(event.target.value);
-                }}
-                minLength={6}
-                required
-              />
-              {error !== null ? <FieldError>{error}</FieldError> : null}
-            </Field>
-          </FieldGroup>
-          <DialogFooter className="mt-6">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={isSubmitting}
-              onClick={() => onOpenChange(false)}
-            >
-              Annuler
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <>
-                  <Spinner data-icon="inline-start" />
-                  Création...
-                </>
-              ) : (
-                "Créer le compte"
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+      <FieldGroup>
+        <Field data-invalid={error !== null}>
+          <FieldLabel htmlFor="create-user-name">Nom</FieldLabel>
+          <Input
+            id="create-user-name"
+            value={name}
+            onChange={(event) => {
+              setError(null);
+              setName(event.target.value);
+            }}
+            required
+          />
+        </Field>
+        <Field data-invalid={error !== null}>
+          <FieldLabel htmlFor="create-user-email">Courriel</FieldLabel>
+          <Input
+            id="create-user-email"
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(event) => {
+              setError(null);
+              setEmail(event.target.value);
+            }}
+            required
+          />
+        </Field>
+        <Field data-invalid={error !== null}>
+          <FieldLabel htmlFor="create-user-password">Mot de passe</FieldLabel>
+          <Input
+            id="create-user-password"
+            type="password"
+            autoComplete="new-password"
+            value={password}
+            onChange={(event) => {
+              setError(null);
+              setPassword(event.target.value);
+            }}
+            minLength={6}
+            required
+          />
+          {error !== null ? <FieldError>{error}</FieldError> : null}
+        </Field>
+      </FieldGroup>
+    </FormDialog>
   );
 }
 
@@ -221,75 +188,47 @@ function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps) {
   }
 
   return (
-    <Dialog
+    <FormDialog
       open={open}
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen) {
-          setSyncedUserId(null);
-        }
-        onOpenChange(nextOpen);
-      }}
+      onOpenChange={onOpenChange}
+      title="Modifier le compte"
+      description="Modifiez le nom et le courriel de connexion."
+      onSubmit={handleSubmit}
+      isSubmitting={isSubmitting}
+      submitLabel="Enregistrer"
+      pendingLabel="Enregistrement..."
+      onClose={() => setSyncedUserId(null)}
     >
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Modifier le compte</DialogTitle>
-          <DialogDescription>
-            Modifiez le nom et le courriel de connexion.
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <FieldGroup>
-            <Field data-invalid={error !== null}>
-              <FieldLabel htmlFor="edit-user-name">Nom</FieldLabel>
-              <Input
-                id="edit-user-name"
-                value={name}
-                onChange={(event) => {
-                  setError(null);
-                  setName(event.target.value);
-                }}
-                required
-              />
-            </Field>
-            <Field data-invalid={error !== null}>
-              <FieldLabel htmlFor="edit-user-email">Courriel</FieldLabel>
-              <Input
-                id="edit-user-email"
-                type="email"
-                autoComplete="email"
-                value={email}
-                onChange={(event) => {
-                  setError(null);
-                  setEmail(event.target.value);
-                }}
-                required
-              />
-              {error !== null ? <FieldError>{error}</FieldError> : null}
-            </Field>
-          </FieldGroup>
-          <DialogFooter className="mt-6">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={isSubmitting}
-              onClick={() => onOpenChange(false)}
-            >
-              Annuler
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <>
-                  <Spinner data-icon="inline-start" />
-                  Enregistrement...
-                </>
-              ) : (
-                "Enregistrer"
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+      <FieldGroup>
+        <Field data-invalid={error !== null}>
+          <FieldLabel htmlFor="edit-user-name">Nom</FieldLabel>
+          <Input
+            id="edit-user-name"
+            value={name}
+            onChange={(event) => {
+              setError(null);
+              setName(event.target.value);
+            }}
+            required
+          />
+        </Field>
+        <Field data-invalid={error !== null}>
+          <FieldLabel htmlFor="edit-user-email">Courriel</FieldLabel>
+          <Input
+            id="edit-user-email"
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(event) => {
+              setError(null);
+              setEmail(event.target.value);
+            }}
+            required
+          />
+          {error !== null ? <FieldError>{error}</FieldError> : null}
+        </Field>
+      </FieldGroup>
+    </FormDialog>
   );
 }
 
@@ -336,66 +275,40 @@ function ChangePasswordDialog({
   }
 
   return (
-    <Dialog
+    <FormDialog
       open={open}
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen) {
-          resetForm();
-        }
-        onOpenChange(nextOpen);
-      }}
+      onOpenChange={onOpenChange}
+      title="Changer le mot de passe"
+      description={
+        user !== null
+          ? `Définissez un nouveau mot de passe pour ${formatUserLabel(user)}.`
+          : null
+      }
+      onSubmit={handleSubmit}
+      isSubmitting={isSubmitting}
+      submitLabel="Enregistrer"
+      pendingLabel="Enregistrement..."
+      onClose={resetForm}
     >
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Changer le mot de passe</DialogTitle>
-          <DialogDescription>
-            {user !== null
-              ? `Définissez un nouveau mot de passe pour ${formatUserLabel(user)}.`
-              : null}
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <FieldGroup>
-            <Field data-invalid={error !== null}>
-              <FieldLabel htmlFor="new-password">Nouveau mot de passe</FieldLabel>
-              <Input
-                id="new-password"
-                type="password"
-                autoComplete="new-password"
-                value={newPassword}
-                onChange={(event) => {
-                  setError(null);
-                  setNewPassword(event.target.value);
-                }}
-                minLength={6}
-                required
-              />
-              {error !== null ? <FieldError>{error}</FieldError> : null}
-            </Field>
-          </FieldGroup>
-          <DialogFooter className="mt-6">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={isSubmitting}
-              onClick={() => onOpenChange(false)}
-            >
-              Annuler
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <>
-                  <Spinner data-icon="inline-start" />
-                  Enregistrement...
-                </>
-              ) : (
-                "Enregistrer"
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+      <FieldGroup>
+        <Field data-invalid={error !== null}>
+          <FieldLabel htmlFor="new-password">Nouveau mot de passe</FieldLabel>
+          <Input
+            id="new-password"
+            type="password"
+            autoComplete="new-password"
+            value={newPassword}
+            onChange={(event) => {
+              setError(null);
+              setNewPassword(event.target.value);
+            }}
+            minLength={6}
+            required
+          />
+          {error !== null ? <FieldError>{error}</FieldError> : null}
+        </Field>
+      </FieldGroup>
+    </FormDialog>
   );
 }
 

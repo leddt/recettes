@@ -1,15 +1,9 @@
 import { useAction, useQuery } from "convex/react";
 import { useCallback, useState } from "react";
 
+import { getErrorMessage } from "@/lib/errors";
 import { api } from "../../../../convex/_generated/api";
 import type { Id } from "../../../../convex/_generated/dataModel";
-
-function getErrorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-  return "Une erreur est survenue.";
-}
 
 export function useRecipeChatConversations(recipeId: Id<"recipes">) {
   const conversations = useQuery(api.recipeChat.listConversations, { recipeId });
@@ -50,7 +44,7 @@ export function useRecipeChatThread(
         });
         return newConversationId;
       } catch (caught) {
-        setError(getErrorMessage(caught));
+        setError(getErrorMessage(caught, "Une erreur est survenue."));
         throw caught;
       } finally {
         setIsSending(false);
