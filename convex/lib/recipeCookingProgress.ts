@@ -1,18 +1,10 @@
-type IngredientWithChecked = {
-  name: string;
-  quantity?: string;
-  unit?: string;
-  checked?: boolean;
-};
-
-type StepWithChecked = {
-  text: string;
+type WithOptionalChecked = {
   checked?: boolean;
 };
 
 export function hasCookingProgress(
-  ingredients: IngredientWithChecked[],
-  steps: StepWithChecked[],
+  ingredients: WithOptionalChecked[],
+  steps: WithOptionalChecked[],
 ): boolean {
   return (
     ingredients.some((ingredient) => ingredient.checked === true) ||
@@ -20,67 +12,32 @@ export function hasCookingProgress(
   );
 }
 
-export function setIngredientCheckedAtIndex(
-  ingredients: IngredientWithChecked[],
+export function setCheckedAtIndex<T extends WithOptionalChecked>(
+  items: T[],
   index: number,
   checked: boolean,
-): IngredientWithChecked[] {
-  return ingredients.map((ingredient, ingredientIndex) => {
-    if (ingredientIndex !== index) {
-      return ingredient;
+): T[] {
+  return items.map((item, itemIndex) => {
+    if (itemIndex !== index) {
+      return item;
     }
 
     if (!checked) {
-      const { checked: _removed, ...rest } = ingredient;
-      return rest;
+      const { checked: _removed, ...rest } = item;
+      return rest as T;
     }
 
-    return { ...ingredient, checked: true };
+    return { ...item, checked: true };
   });
 }
 
-export function setStepCheckedAtIndex(
-  steps: StepWithChecked[],
-  index: number,
-  checked: boolean,
-): StepWithChecked[] {
-  return steps.map((step, stepIndex) => {
-    if (stepIndex !== index) {
-      return step;
+export function clearCheckedFlags<T extends WithOptionalChecked>(items: T[]): T[] {
+  return items.map((item) => {
+    if (item.checked !== true) {
+      return item;
     }
 
-    if (!checked) {
-      const { checked: _removed, ...rest } = step;
-      return rest;
-    }
-
-    return { ...step, checked: true };
+    const { checked: _removed, ...rest } = item;
+    return rest as T;
   });
 }
-
-export function clearCookingProgress<T extends IngredientWithChecked>(
-  ingredients: T[],
-): IngredientWithChecked[] {
-  return ingredients.map((ingredient) => {
-    if (ingredient.checked !== true) {
-      return ingredient;
-    }
-
-    const { checked: _removed, ...rest } = ingredient;
-    return rest;
-  });
-}
-
-export function clearStepCookingProgress<T extends StepWithChecked>(
-  steps: T[],
-): StepWithChecked[] {
-  return steps.map((step) => {
-    if (step.checked !== true) {
-      return step;
-    }
-
-    const { checked: _removed, ...rest } = step;
-    return rest;
-  });
-}
-
