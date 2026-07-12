@@ -1,10 +1,9 @@
+import { BROWSER_USER_AGENT } from "./browserUserAgent";
+
 const JINA_READER_BASE = "https://r.jina.ai/";
 const WAYBACK_AVAILABILITY_API =
   "https://archive.org/wayback/available?url=";
 const WAYBACK_LATEST_SNAPSHOT_PREFIX = "http://web.archive.org/web/2/";
-
-const BROWSER_USER_AGENT =
-  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
 
 const BLOCKED_PAGE_MARKERS = [
   "access denied",

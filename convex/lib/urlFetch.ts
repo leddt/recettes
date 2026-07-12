@@ -3,14 +3,12 @@ import {
   fetchViaWaybackMachine,
   isBlockedPageContent,
 } from "./pageFetchFallbacks";
+import { BROWSER_USER_AGENT } from "./browserUserAgent";
 
 const MAX_RESPONSE_BYTES = 2_000_000;
 const FETCH_TIMEOUT_MS = 15_000;
 const MAX_TEXT_LENGTH = 20_000;
 const MAX_REDIRECTS = 5;
-
-const BROWSER_USER_AGENT =
-  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
 
 const BLOCKED_HOSTNAMES = new Set([
   "localhost",
