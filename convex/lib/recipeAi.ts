@@ -3,7 +3,7 @@ import OpenAI from "openai";
 import {
   normalizeRecipeDraft,
   type RecipeDraftData,
-} from "./urlFetch";
+} from "./recipeDraft";
 
 function getEnv(name: string): string | undefined {
   const runtime = globalThis as typeof globalThis & {

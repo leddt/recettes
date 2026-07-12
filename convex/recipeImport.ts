@@ -20,11 +20,10 @@ import {
 import { fetchRecipeCoverImage } from "./lib/recipeCoverDownload";
 import { extractRecipeImageUrlFromHtml } from "./lib/recipePageImage";
 import {
-  fetchPageContent,
-  htmlToText,
   isValidRecipeDraft,
   normalizeRecipeDraft,
-} from "./lib/urlFetch";
+} from "./lib/recipeDraft";
+import { fetchPageContent, htmlToText } from "./lib/urlFetch";
 import { requireAuthUserId } from "./lib/requireAuth";
 import { action } from "./_generated/server";
 
