@@ -135,26 +135,6 @@ export const listRecipeIdsByCollection = query({
   },
 });
 
-export const create = mutation({
-  args: { name: v.string() },
-  returns: v.id("collections"),
-  handler: async (ctx, args) => {
-    const userId = await requireAuthUserId(ctx);
-    const name = normalizeCollectionName(args.name);
-
-    const existingId = await getCollectionByName(ctx, name);
-    if (existingId !== null) {
-      throw new Error("Une collection avec ce nom existe déjà.");
-    }
-
-    return await ctx.db.insert("collections", {
-      name,
-      createdBy: userId,
-      createdAt: Date.now(),
-    });
-  },
-});
-
 export const createWithOptionalRecipe = mutation({
   args: {
     name: v.string(),

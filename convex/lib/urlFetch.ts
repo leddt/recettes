@@ -206,17 +206,6 @@ export async function fetchPageContent(url: string): Promise<FetchedPageContent>
   );
 }
 
-export async function fetchPageHtml(url: string): Promise<{ html: string; finalUrl: URL }> {
-  const page = await fetchPageContent(url);
-  if (!page.html) {
-    throw new Error(
-      "Impossible d'accéder à cette page. Certains sites bloquent l'import automatique ; essayez l'import par photo.",
-    );
-  }
-
-  return { html: page.html, finalUrl: page.finalUrl };
-}
-
 export function htmlToText(html: string): string {
   const withoutScripts = html
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
