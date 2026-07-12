@@ -42,20 +42,22 @@ export function FormDialog({
   children,
   footerClassName = "mt-6",
 }: FormDialogProps) {
+  const handleOpenChange = (
+    nextOpen: boolean,
+    eventDetails?: { cancel: () => void },
+  ) => {
+    if (!nextOpen && preventCloseWhileSubmitting && isSubmitting) {
+      eventDetails?.cancel();
+      return;
+    }
+    if (!nextOpen) {
+      onClose?.();
+    }
+    onOpenChange(nextOpen);
+  };
+
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(nextOpen, eventDetails) => {
-        if (!nextOpen && preventCloseWhileSubmitting && isSubmitting) {
-          eventDetails.cancel();
-          return;
-        }
-        if (!nextOpen) {
-          onClose?.();
-        }
-        onOpenChange(nextOpen);
-      }}
-    >
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
@@ -70,7 +72,7 @@ export function FormDialog({
               type="button"
               variant="outline"
               disabled={isSubmitting}
-              onClick={() => onOpenChange(false)}
+              onClick={() => handleOpenChange(false)}
             >
               Annuler
             </Button>
