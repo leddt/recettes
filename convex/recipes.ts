@@ -14,86 +14,31 @@ import {
   setIngredientCheckedAtIndex,
   setStepCheckedAtIndex,
 } from "./lib/recipeCookingProgress";
+import {
+  getRecipeDraftValidationError,
+  normalizeRecipeDraft as normalizeRecipeDraftFields,
+  type RecipeDraftData,
+} from "./lib/recipeDraft";
 import { buildRecipeSearchText } from "./lib/recipeSearchText";
 import { requireAuthUserId } from "./lib/requireAuth";
 import { mutation, query } from "./_generated/server";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 
-function validateRecipeDraft(args: {
-  name: string;
-  ingredients: Array<{
-    name: string;
-    quantity?: string;
-    unit?: string;
-  }>;
-  steps: Array<{ text: string }>;
-}) {
-  const name = args.name.trim();
-  if (name.length === 0) {
-    throw new Error("Le nom de la recette est obligatoire.");
+function normalizeRecipeDraft(args: RecipeDraftData) {
+  const validationError = getRecipeDraftValidationError(args);
+  if (validationError !== null) {
+    throw new Error(validationError);
   }
 
-  const ingredients = args.ingredients.filter(
-    (ingredient) => ingredient.name.trim().length > 0,
-  );
-  if (ingredients.length === 0) {
-    throw new Error("Ajoutez au moins un ingrédient.");
-  }
-
-  const steps = args.steps.filter((step) => step.text.trim().length > 0);
-  if (steps.length === 0) {
-    throw new Error("Ajoutez au moins une étape.");
-  }
-
-  return { name, ingredients, steps };
-}
-
-type RecipeDraftInput = {
-  name: string;
-  ingredients: Array<{
-    name: string;
-    quantity?: string;
-    unit?: string;
-  }>;
-  steps: Array<{ text: string }>;
-  servings?: number;
-  prepTime?: number;
-  cookTime?: number;
-  totalTime?: number;
-  notes?: string;
-  tags: string[];
-};
-
-function normalizeRecipeDraft(args: RecipeDraftInput) {
-  const { name, ingredients, steps } = validateRecipeDraft(args);
-  const normalizedIngredients = ingredients.map((ingredient) => ({
-    name: ingredient.name.trim(),
-    quantity: ingredient.quantity?.trim() || undefined,
-    unit: ingredient.unit?.trim() || undefined,
-  }));
-  const normalizedSteps = steps.map((step) => ({
-    text: step.text.trim(),
-  }));
-  const tags = args.tags.map((tag) => tag.trim()).filter((tag) => tag.length > 0);
-  const notes = args.notes?.trim() || undefined;
-  const searchText = buildRecipeSearchText({
-    name,
-    notes,
-    tags,
-    ingredients: normalizedIngredients,
-  });
-
+  const normalized = normalizeRecipeDraftFields(args);
   return {
-    name,
-    ingredients: normalizedIngredients,
-    steps: normalizedSteps,
-    servings: args.servings,
-    prepTime: args.prepTime,
-    cookTime: args.cookTime,
-    totalTime: args.totalTime,
-    notes,
-    tags,
-    searchText,
+    ...normalized,
+    searchText: buildRecipeSearchText({
+      name: normalized.name,
+      notes: normalized.notes,
+      tags: normalized.tags,
+      ingredients: normalized.ingredients,
+    }),
   };
 }
 

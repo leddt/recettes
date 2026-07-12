@@ -1,4 +1,4 @@
-import type { RecipeDraftData } from "./urlFetch";
+import type { RecipeDraftData } from "./recipeDraft";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
