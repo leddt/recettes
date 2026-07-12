@@ -118,13 +118,3 @@ export function formatRecipeSummary(recipe: {
     .filter(Boolean)
     .join(" · ");
 }
-
-export function formatIngredient(ingredient: RecipeIngredient): string {
-  return [
-    ingredient.quantity?.trim(),
-    ingredient.unit?.trim(),
-    ingredient.name.trim(),
-  ]
-    .filter((part) => part && part.length > 0)
-    .join(" ");
-}

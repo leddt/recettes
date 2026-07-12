@@ -1,3 +1,5 @@
+import { formatIngredient } from "./formatIngredient";
+
 const MAX_SEARCH_TEXT_LENGTH = 8_000;
 
 export type RecipeForSearchText = {
@@ -10,13 +12,6 @@ export type RecipeForSearchText = {
     unit?: string;
   }>;
 };
-
-function formatIngredient(ingredient: RecipeForSearchText["ingredients"][number]): string {
-  const parts = [ingredient.quantity, ingredient.unit, ingredient.name].filter(
-    (part) => part !== undefined && part.length > 0,
-  );
-  return parts.join(" ");
-}
 
 export function buildRecipeSearchText(recipe: RecipeForSearchText): string {
   const lines: string[] = [`Nom: ${recipe.name.trim()}`];

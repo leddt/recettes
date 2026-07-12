@@ -1,3 +1,5 @@
+import { formatIngredient } from "./formatIngredient";
+
 const MAX_CONTEXT_LENGTH = 24_000;
 
 export type RecipeForChatContext = {
@@ -15,15 +17,6 @@ export type RecipeForChatContext = {
   }>;
   steps: Array<{ text: string }>;
 };
-
-function formatIngredient(
-  ingredient: RecipeForChatContext["ingredients"][number],
-): string {
-  const parts = [ingredient.quantity, ingredient.unit, ingredient.name].filter(
-    (part) => part !== undefined && part.length > 0,
-  );
-  return parts.join(" ");
-}
 
 function formatMinutes(minutes: number): string {
   if (minutes < 60) {
