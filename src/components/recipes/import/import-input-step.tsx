@@ -20,7 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { MAX_RECIPE_PHOTOS } from "../../../../convex/lib/recipeImageLimits";
+import { MAX_RECIPE_PHOTOS } from "@shared/recipeImageLimits";
 import type { ImportMode } from "./use-recipe-import";
 
 const hiddenFileInputClassName =

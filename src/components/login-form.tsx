@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-import { DEFAULT_ACCOUNT } from "../../convex/lib/defaults";
+import { DEFAULT_ACCOUNT } from "@shared/defaults";
 import {
   getLoginErrorMessage,
   INVALID_LOGIN_MESSAGE,

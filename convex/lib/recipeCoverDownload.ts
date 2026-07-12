@@ -1,4 +1,4 @@
-import { MAX_RECIPE_PHOTO_BYTES } from "./recipeImageLimits";
+import { MAX_RECIPE_PHOTO_BYTES } from "@shared/recipeImageLimits";
 import { validatePublicHttpUrl } from "./urlFetch";
 
 const FETCH_TIMEOUT_MS = 10_000;

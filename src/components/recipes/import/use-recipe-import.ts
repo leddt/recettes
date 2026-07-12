@@ -14,7 +14,7 @@ import { uploadRecipePhotos } from "@/lib/upload-recipe-photos";
 import { isRecipePhotoFile } from "@/lib/is-recipe-photo-file";
 import { api } from "../../../../convex/_generated/api";
 import type { Id } from "../../../../convex/_generated/dataModel";
-import { MAX_RECIPE_PHOTOS } from "../../../../convex/lib/recipeImageLimits";
+import { MAX_RECIPE_PHOTOS } from "@shared/recipeImageLimits";
 
 export type ImportMode = "url" | "photos";
 export type ImportStep = "input" | "review";

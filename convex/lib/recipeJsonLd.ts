@@ -1,4 +1,4 @@
-import type { RecipeDraftData } from "./recipeDraft";
+import type { RecipeDraftData } from "@shared/recipeDraft";
 import { flattenJsonLd, getTypeValues, isRecord } from "./jsonLd";
 
 function parseDurationToMinutes(value: unknown): number | undefined {

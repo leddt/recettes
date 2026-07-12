@@ -1,6 +1,6 @@
 import { retrieveAccount } from "@convex-dev/auth/server";
 
-import { DEFAULT_ACCOUNT } from "./lib/defaults";
+import { DEFAULT_ACCOUNT } from "@shared/defaults";
 import { createPasswordAccount } from "./lib/createPasswordAccount";
 import { internalAction } from "./_generated/server";
 

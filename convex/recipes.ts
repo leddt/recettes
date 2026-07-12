@@ -16,7 +16,7 @@ import {
   getRecipeDraftValidationError,
   normalizeRecipeDraft as normalizeRecipeDraftFields,
   type RecipeDraftData,
-} from "./lib/recipeDraft";
+} from "@shared/recipeDraft";
 import { buildRecipeSearchText } from "./lib/recipeSearchText";
 import { requireAuthUserId } from "./lib/requireAuth";
 import { mutation, query } from "./_generated/server";

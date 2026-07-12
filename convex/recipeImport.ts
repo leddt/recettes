@@ -16,13 +16,13 @@ import {
 import {
   MAX_RECIPE_PHOTO_BYTES,
   MAX_RECIPE_PHOTOS,
-} from "./lib/recipeImageLimits";
+} from "@shared/recipeImageLimits";
 import { fetchRecipeCoverImage } from "./lib/recipeCoverDownload";
 import { extractRecipeImageUrlFromHtml } from "./lib/recipePageImage";
 import {
   isValidRecipeDraft,
   normalizeRecipeDraft,
-} from "./lib/recipeDraft";
+} from "@shared/recipeDraft";
 import { fetchPageContent, htmlToText } from "./lib/urlFetch";
 import { requireAuthUserId } from "./lib/requireAuth";
 import { action } from "./_generated/server";

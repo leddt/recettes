@@ -1,6 +1,6 @@
 import type { Id } from "../../convex/_generated/dataModel";
 
-import { MAX_RECIPE_PHOTOS } from "../../convex/lib/recipeImageLimits";
+import { MAX_RECIPE_PHOTOS } from "@shared/recipeImageLimits";
 import { isRecipePhotoFile } from "./is-recipe-photo-file";
 
 type GenerateUploadUrl = () => Promise<string>;

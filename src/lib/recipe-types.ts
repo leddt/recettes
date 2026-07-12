@@ -88,7 +88,7 @@ export function createEmptyRecipeDraft(): RecipeDraft {
 export {
   getRecipeDraftValidationError as validateRecipeDraft,
   normalizeRecipeDraft,
-} from "../../convex/lib/recipeDraft";
+} from "@shared/recipeDraft";
 
 export function tagsToInput(tags: string[]): string {
   return tags.join(", ");
