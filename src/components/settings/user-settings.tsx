@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ConfirmDestructiveDialog } from "@/components/ui/confirm-destructive-dialog";
 import {
   Dialog,
   DialogContent,
@@ -426,43 +427,18 @@ function DeleteUserDialog({ user, open, onOpenChange }: DeleteUserDialogProps) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Supprimer ce compte ?</DialogTitle>
-          <DialogDescription>
-            {user !== null
-              ? `Le compte de ${formatUserLabel(user)} sera définitivement supprimé. Cette action est irréversible.`
-              : null}
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            disabled={isDeleting}
-            onClick={() => onOpenChange(false)}
-          >
-            Annuler
-          </Button>
-          <Button
-            type="button"
-            variant="destructive"
-            disabled={isDeleting}
-            onClick={() => void handleConfirm()}
-          >
-            {isDeleting ? (
-              <>
-                <Spinner data-icon="inline-start" />
-                Suppression...
-              </>
-            ) : (
-              "Supprimer"
-            )}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <ConfirmDestructiveDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Supprimer ce compte ?"
+      description={
+        user !== null
+          ? `Le compte de ${formatUserLabel(user)} sera définitivement supprimé. Cette action est irréversible.`
+          : null
+      }
+      isPending={isDeleting}
+      onConfirm={() => void handleConfirm()}
+    />
   );
 }
 
