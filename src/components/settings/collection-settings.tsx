@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { ConfirmDestructiveDialog } from "@/components/ui/confirm-destructive-dialog";
 import {
   Dialog,
   DialogContent,
@@ -173,47 +174,22 @@ function DeleteCollectionDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Supprimer cette collection ?</DialogTitle>
-          <DialogDescription>
-            {collection !== null ? (
-              <>
-                La collection « {collection.name} » sera définitivement
-                supprimée. Les recettes qu&apos;elle contient ne seront pas
-                supprimées.
-              </>
-            ) : null}
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            disabled={isDeleting}
-            onClick={() => onOpenChange(false)}
-          >
-            Annuler
-          </Button>
-          <Button
-            type="button"
-            variant="destructive"
-            disabled={isDeleting}
-            onClick={() => void handleConfirm()}
-          >
-            {isDeleting ? (
-              <>
-                <Spinner data-icon="inline-start" />
-                Suppression...
-              </>
-            ) : (
-              "Supprimer"
-            )}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <ConfirmDestructiveDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Supprimer cette collection ?"
+      description={
+        collection !== null ? (
+          <>
+            La collection « {collection.name} » sera définitivement
+            supprimée. Les recettes qu&apos;elle contient ne seront pas
+            supprimées.
+          </>
+        ) : null
+      }
+      isPending={isDeleting}
+      onConfirm={() => void handleConfirm()}
+    />
   );
 }
 
