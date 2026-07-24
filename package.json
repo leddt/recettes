@@ -2,7 +2,7 @@
   "name": "recettes",
   "private": true,
   "version": "0.0.1",
-  "packageManager": "pnpm@10.33.2",
+  "packageManager": "pnpm@11.16.0",
   "type": "module",
   "scripts": {
     "dev": "convex dev --start vite",
