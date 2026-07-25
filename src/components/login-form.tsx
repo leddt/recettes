@@ -1,4 +1,5 @@
 import { useAuthActions } from "@convex-dev/auth/react";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,18 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@/components/ui/input-group";
 import { Spinner } from "@/components/ui/spinner";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { DEFAULT_ACCOUNT } from "@shared/defaults";
 import {
   getLoginErrorMessage,
@@ -35,8 +47,12 @@ export function LoginForm() {
   const [password, setPassword] = useState<string>(
     isDev ? DEFAULT_ACCOUNT.password : "",
   );
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const passwordVisibilityLabel = showPassword
+    ? "Masquer le mot de passe"
+    : "Afficher le mot de passe";
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -88,18 +104,41 @@ export function LoginForm() {
             </Field>
             <Field data-invalid={error !== null}>
               <FieldLabel htmlFor="password">Mot de passe</FieldLabel>
-              <Input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(event) => {
-                  setError(null);
-                  setPassword(event.target.value);
-                }}
-                aria-invalid={error !== null}
-                required
-              />
+              <InputGroup>
+                <InputGroupInput
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(event) => {
+                    setError(null);
+                    setPassword(event.target.value);
+                  }}
+                  aria-invalid={error !== null}
+                  required
+                />
+                <InputGroupAddon align="inline-end">
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={
+                        <InputGroupButton
+                          size="icon-xs"
+                          onClick={() =>
+                            setShowPassword((visible) => !visible)
+                          }
+                          aria-label={passwordVisibilityLabel}
+                          aria-pressed={showPassword}
+                        />
+                      }
+                    >
+                      {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {passwordVisibilityLabel}
+                    </TooltipContent>
+                  </Tooltip>
+                </InputGroupAddon>
+              </InputGroup>
               {error !== null ? <FieldError>{error}</FieldError> : null}
             </Field>
             {isDev ? (
